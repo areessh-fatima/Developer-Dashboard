@@ -1,0 +1,92 @@
+[
+  {
+    "id": "admin123",
+    "username": "admin",
+    "password": "adminpassword",
+    "role": "admin",
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "designation": "System Administrator",
+    "status": "Available"
+  },
+  
+  {
+    "id": "dev_yasir",
+    "username": "yasir",
+    "password": "yasirpass",
+    "role": "user",
+    "name": "Yasir",
+    "email": "yasir@example.com",
+    "designation": "UI Designer",
+    "status": "Available"
+  },
+  {
+    "id": "dev_maaz",
+    "username": "maaz",
+    "password": "maazpass",
+    "role": "user",
+    "name": "Maaz",
+    "email": "maaz@example.com",
+    "designation": "Frontend Dev",
+    "status": "Available"
+  },
+  {
+    "id": "dev_aniqa",
+    "username": "aniqa",
+    "password": "aniqapass",
+    "role": "user",
+    "name": "Aniqa",
+    "email": "aniqa@example.com",
+    "designation": "Backend Dev",
+    "status": "Available"
+  },
+  {
+    "id": "dev_bilal",
+    "username": "bilal",
+    "password": "bilalpass",
+    "role": "user",
+    "name": "Bilal",
+    "email": "bilal@example.com",
+    "designation": "Fullstack Dev",
+    "status": "Available"
+  },
+  {
+    "id": "dev_zulqarnain",
+    "username": "zulqarnain",
+    "password": "zulqarnainpass",
+    "role": "user",
+    "name": "Zulqarnain",
+    "email": "zulqarnain@example.com",
+    "designation": "HR Manager",
+    "status": "Available"
+  },
+  {
+    "id": "dev_esha",
+    "password": "eshapass",
+    "role": "user",
+    "name": "Esha",
+    "email": "esha@example.com",
+    "designation": "QA Engineer",
+    "status": "Available"
+  },
+  {
+    "id": "dev_tayyeba",
+    "username": "tayyeba",
+    "password": "tayyebapass",
+    "role": "user",
+    "name": "Tayyeba",
+    "email": "tayyeba@example.com",
+    "designation": "Graphic Designer",
+    "status": "Available"
+  },
+  {
+    "id": "dev_meerza",
+    "username": "meerza",
+    "password": "meerzapass",
+    "role": "user",
+    "name": "Meerza",
+    "email": "meerza@example.com",
+    "designation": "Support",
+    "status": "Available"
+  }
+]

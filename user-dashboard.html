@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a2e0ad0c3c.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-user-circle"></i>
+            <h1>User Panel</h1>
+        </div>
+        <ul class="nav-list">
+            <li><a href="#" class="nav-link active" data-view="view-tasks">
+                <i class="fas fa-list"></i>
+                <span class="nav-text">My Tasks</span>
+            </a></li>
+            <li><a href="#" class="nav-link" data-view="view-add-task">
+                <i class="fas fa-plus-circle"></i>
+                <span class="nav-text">Add Task</span>
+            </a></li>
+            <li><a href="#" class="nav-link" data-view="view-profile">
+                <i class="fas fa-user"></i> <span class="nav-text">Profile</span>
+            </a></li>
+        </ul>
+        <a href="#" id="logoutBtn" class="nav-link logout-button">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="nav-text">Logout</span>
+        </a>
+    </nav>
+
+    <main class="main-content">
+        <section id="view-tasks" class="view active">
+            <div class="view-header">
+                <h2>My Active Tasks</h2>
+            </div>
+            <div class="card">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Duration</th>
+                            <th>Remaining</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTasksTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="view-add-task" class="view">
+            <div class="view-header">
+                <h2>Add New Task</h2>
+            </div>
+            <div class="card">
+                <form id="submitTaskForm">
+                    <div class="form-group">
+                        <input type="text" id="taskTitle" placeholder="📋 Task Title" required>
+                        <input type="text" id="taskDuration" placeholder="⏱️ Duration (e.g., 2h, 30m, 90s)" required>
+                    </div>
+                    <textarea id="taskDescription" placeholder="📝 Task Description (minimum 10 characters)" minlength="10" required></textarea>
+                    <button type="submit" id="submitTaskBtn">🚀 Submit Task</button>
+                </form>
+                <p id="statusMessage"></p>
+            </div>
+        </section>
+
+       <section id="view-profile" class="view">
+        <div class="view-header">
+            <h2>User Profile</h2>
+        </div>
+        <div class="card profile-card">
+            <div class="profile-detail">
+                <strong>Username:</strong> <span id="UserProfileUsername"></span>
+            </div>
+            <div class="profile-detail">
+                <strong>Name:</strong> <span id="UserProfileName"></span>
+            </div>
+            <div class="profile-detail">
+                <strong>Email:</strong> <span id="UserProfileEmail"></span>
+            </div>
+            <div class="profile-detail">
+                <strong>Designation:</strong> <span id="UserProfileDesignation"></span>
+            </div>
+            <div class="profile-detail">
+                <strong>Status:</strong> <span id="UserProfileStatus"></span>
+            </div>
+            <!-- You can add more profile details here -->
+            <button id="editUserProfileBtn" class="action-btn">Edit Profile</button>
+        </div>
+    </section>
+
+    </main>
+
+    <div id="confirmationModal" class="modal-overlay hidden">
+        <div class="confirmation-modal">
+            <p id="modalMessage">Are you sure?</p>
+            <div class="modal-buttons">
+                <button id="confirmNo" class="modal-btn cancel-btn">No</button>
+                <button id="confirmYes" class="modal-btn confirm-btn">Yes</button>
+            </div>
+        </div>
+    </div>
+
+   <script src="script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "task001",
+    "title": "Setup Development Environment",
+    "description": "Install Node.js, Git, VS Code, and necessary extensions for the new project.",
+    "duration": 28800,
+    "remaining": 28800,
+    "status": "pending",
+    "createdBy": "admin123",
+    "elapsed": 0,
+    "completedEarlyBy": 0
+  },
+  {
+    "id": "task002",
+    "title": "Design Login Page UI",
+    "description": "Create wireframes and mockups for the login page based on user requirements.",
+    "duration": 18000,
+    "remaining": 18000,
+    "status": "pending",
+    "createdBy": "admin123",
+    "elapsed": 0,
+    "completedEarlyBy": 0
+  },
+  {
+    "id": "task003",
+    "title": "Implement User Dashboard Frontend",
+    "description": "Develop the HTML, CSS, and JavaScript for the user dashboard based on the provided design.",
+    "duration": 43200,
+    "remaining": 43200,
+    "status": "pending",
+    "createdBy": "admin123",
+    "elapsed": 0,
+    "completedEarlyBy": 0
+  }
+]

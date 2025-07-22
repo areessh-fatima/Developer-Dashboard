@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Developer Task Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://kit.fontawesome.com/a2e0ad0c3c.js" crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+        --primary-color: #667eea;
+        --secondary-color: #764ba2;
+        --background-gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        --text-dark: #333;
+        --text-light: #f8f9fa;
+        --card-bg: #ffffff;
+        --shadow-light: 0 8px 32px rgba(0, 0, 0, 0.08);
+        --success: #10b981;
+        --error: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+    }
+ 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: #f4f7fc;
+        color: var(--text-dark);
+        display: flex;
+        min-height: 100vh;
+    }
+ 
+    /* Login Page Specific Styles (included for completeness if this file were to be used as login, but primarily for dashboard) */
+    body.login-page {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+ 
+    .login-container {
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        width: 100%;
+        max-width: 400px;
+        box-sizing: border-box;
+    }
+ 
+    .login-container h2 {
+        font-size: 2.2rem;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+ 
+    .login-container p {
+        color: #666;
+        margin-bottom: 25px;
+    }
+ 
+    .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+ 
+    .input-group {
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+    }
+ 
+    .input-group label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text-dark);
+        display: block;
+    }
+ 
+    .input-group input[type="text"],
+    .input-group input[type="password"] {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+ 
+    .input-group input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        outline: none;
+    }
+ 
+    .role-select {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+ 
+    .role-select label {
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        cursor: pointer;
+        color: #333;
+    }
+ 
+    .role-select input[type="radio"] {
+        margin-right: 8px;
+        transform: scale(1.2);
+        accent-color: var(--primary-color);
+    }
+ 
+    .login-form button[type="submit"] {
+        background: var(--background-gradient);
+        color: white;
+        padding: 15px 25px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+ 
+    .login-form button[type="submit"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+ 
+    .error-message {
+        color: var(--error);
+        background-color: rgba(239, 68, 68, 0.1);
+        border: 1px solid var(--error);
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.4s ease-in-out;
+        text-align: center;
+    }
+ 
+    .error-message.visible {
+        opacity: 1;
+        max-height: 100px;
+        padding: 10px 15px;
+    }
+ 
+    /* General Layout (Shared for Dashboards) */
+    .sidebar {
+        width: 260px;
+        background: var(--background-gradient);
+        color: var(--text-light);
+        display: flex;
+        flex-direction: column;
+        padding: 25px 15px;
+        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        transition: width 0.3s ease;
+    }
+ 
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 0 10px 25px 10px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+ 
+    .sidebar-header i {
+        font-size: 2rem;
+    }
+ 
+    .sidebar-header h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+ 
+    .nav-list {
+        list-style: none;
+        flex-grow: 1;
+    }
+ 
+    .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        color: var(--text-light);
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.3s, color 0.3s;
+        gap: 15px;
+        white-space: nowrap;
+    }
+ 
+    .nav-link i {
+        width: 20px;
+        text-align: center;
+        font-size: 1.1rem;
+    }
+ 
+    .nav-link:hover,
+    .nav-link.active {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        font-weight: 600;
+    }
+ 
+    .logout-button {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+ 
+    .logout-button:hover {
+        background: var(--error);
+        border-color: var(--error);
+    }
+ 
+    .main-content {
+        flex: 1;
+        padding: 40px;
+        overflow-y: auto;
+    }
+ 
+    .view {
+        display: none;
+    }
+ 
+    .view.active {
+        display: block;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+ 
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+ 
+    .view-header {
+        margin-bottom: 30px;
+    }
+ 
+    .view-header h2 {
+        font-size: 2.2rem;
+        font-weight: 600;
+        color: #34495e;
+    }
+ 
+    .card {
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 25px 30px;
+        box-shadow: var(--shadow-light);
+    }
+ 
+    /* Tables */
+    .styled-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+ 
+    .styled-table thead {
+        background-color: #f1f5f9;
+    }
+ 
+    .styled-table th,
+    .styled-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: middle;
+    }
+ 
+    .styled-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+ 
+    /* Badges (for roles, etc.) */
+    .badge {
+        padding: 6px 12px;
+        border-radius: 25px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: black; 
+        display: inline-block;
+    }
+ 
+    /* Developer Designation Badges (from admin-dashboard.html original style) */
+    .designer,
+    .ui-designer { background:none; } /* Green */
+    .graphic-designer { background:none; } /* Cyan */
+    .frontend-dev { background:none; } /* Blue */
+    .backend-dev { background:none; } /* Orange */
+    .fullstack-dev { background:none; } /* Red */
+    .hr-manager { background:none; } /* Pink */
+    .qa-engineer { background:none; } /* Deep Purple */
+    .support { background:none; } /* Light Green */
+ 
+ 
+    /* Occupancy Status */
+    .occupancy {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+ 
+    .occupancy.available {
+        color: var(--success);
+    }
+ 
+    .occupancy.locked {
+        color: var(--error);
+    }
+ 
+    /* Task Status Badges */
+    span.status-badge {
+        padding: 4px 10px;
+        border-radius: 6px;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+ 
+    span.status-badge.pending {
+        background-color: var(--warning); /* Orange */
+    }
+ 
+    span.status-badge.in-progress {
+        background-color: var(--info); /* Blue */
+    }
+ 
+    span.status-badge.completed {
+        background-color: var(--success); /* Green */
+    }
+ 
+    /* Action Buttons within tables */
+    button.action-btn {
+        background: transparent;
+        border: none;
+        color: var(--primary-color);
+        cursor: pointer;
+        font-size: 1rem;
+        margin-left: 5px;
+        padding: 5px 10px;
+        border-radius: 5px;
+        transition: all 0.2s ease;
+        vertical-align: middle;
+        font-weight: 500;
+    }
+ 
+    button.action-btn:hover {
+        background-color: rgba(102, 126, 234, 0.1);
+        transform: translateY(-1px);
+    }
+ 
+    button.action-btn.complete-btn {
+        color: var(--success);
+    }
+    button.action-btn.complete-btn:hover {
+        background-color: rgba(16, 185, 129, 0.1);
+    }
+ 
+ 
+    /* Forms (General) */
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+ 
+    .form-group {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap; /* Allows inputs to wrap on smaller screens */
+    }
+ 
+    input,
+    textarea,
+    select {
+        padding: 15px 20px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 1rem;
+        flex: 1; /* Allows inputs to take available space */
+        transition: all 0.3s ease;
+        background: #f9fafb;
+    }
+ 
+    textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+ 
+    input:focus,
+    textarea:focus,
+    select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        outline: none;
+    }
+ 
+    button[type="submit"] {
+        background: var(--background-gradient);
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        align-self: flex-start; /* Aligns submit button to the start */
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+ 
+    button[type="submit"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+ 
+    #statusMessage {
+        margin-top: 15px;
+        font-weight: 600;
+        font-size: 1rem;
+        padding: 0; /* Changed to 0 as it becomes visible */
+        border-radius: 8px;
+        transition: all 0.4s ease;
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+    }
+ 
+    #statusMessage.visible {
+        opacity: 1;
+        padding: 12px 15px; /* Add padding when visible */
+        max-height: 100px; /* Adjust as needed */
+    }
+ 
+    /* Confirmation Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+ 
+    .modal-overlay.hidden {
+        opacity: 0;
+        pointer-events: none; /* Disables interaction when hidden */
+    }
+ 
+    .confirmation-modal {
+        background: var(--card-bg);
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: var(--shadow-light);
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        transform: translateY(0);
+        transition: transform 0.3s ease;
+    }
+ 
+    .modal-overlay.hidden .confirmation-modal {
+        transform: translateY(-20px);
+    }
+ 
+    .confirmation-modal p {
+        font-size: 1.2rem;
+        margin-bottom: 25px;
+        color: var(--text-dark);
+    }
+ 
+    .modal-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+ 
+    .modal-btn {
+        padding: 10px 25px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+ 
+    .modal-btn.confirm-btn {
+        background: var(--success);
+        color: white;
+    }
+ 
+    .modal-btn.confirm-btn:hover {
+        background: #0e9f6e;
+    }
+ 
+    .modal-btn.cancel-btn {
+        background: #ccc;
+        color: var(--text-dark);
+    }
+ 
+    .modal-btn.cancel-btn:hover {
+        background: #bbb;
+    }
+ 
+    /* Profile Section Styles (for user dashboard, included for completeness) */
+    .profile-card {
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+ 
+    .profile-detail {
+        font-size: 1.1rem;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+    }
+ 
+    .profile-detail strong {
+        color: var(--primary-color);
+        margin-right: 10px;
+        min-width: 90px;
+    }
+ 
+    #editProfileBtn {
+        align-self: flex-start;
+        background: var(--primary-color);
+        color: var(--text-light);
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.3s ease;
+        margin-top: 20px;
+    }
+ 
+    #editProfileBtn:hover {
+        background: var(--secondary-color);
+    }
+ 
+ 
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        body {
+            flex-direction: column;
+        }
+ 
+        .sidebar {
+            width: 100%;
+            height: auto;
+            flex-direction: row;
+            padding: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            justify-content: space-around;
+        }
+ 
+        .sidebar-header {
+            display: none;
+        }
+ 
+        .nav-list {
+            display: flex;
+            flex-grow: 1;
+            justify-content: space-around;
+            padding: 0;
+        }
+ 
+        .nav-link {
+            padding: 10px 15px;
+            flex-direction: column;
+            gap: 5px;
+            text-align: center;
+            margin-bottom: 0;
+            font-size: 0.85rem;
+        }
+ 
+        .nav-link i {
+            font-size: 1.3rem;
+            width: auto;
+        }
+ 
+        .nav-text {
+            display: block;
+            font-size: 0.75rem;
+        }
+ 
+        .logout-button {
+            align-self: center;
+            padding: 10px 15px;
+        }
+ 
+        .main-content {
+            padding: 20px;
+            width: 100%;
+        }
+ 
+        .view-header h2 {
+            font-size: 1.8rem;
+        }
+ 
+        .form-group {
+            flex-direction: column;
+        }
+ 
+        .login-container {
+            padding: 30px 20px;
+            margin: 20px;
+        }
+ 
+        .login-container h2 {
+            font-size: 1.8rem;
+        }
+ 
+        button[type="submit"] {
+            padding: 12px 20px;
+            font-size: 1rem;
+        }
+    }
+ 
+    @media (max-width: 480px) {
+        .sidebar {
+            flex-wrap: wrap;
+        }
+ 
+        .nav-link {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+        }
+ 
+        .nav-link i {
+            font-size: 1.1rem;
+        }
+ 
+        .login-container {
+            padding: 20px;
+        }
+ 
+        .login-container h2 {
+            font-size: 1.5rem;
+        }
+    }
+    
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header"><i class="fas fa-tasks"></i><h1 id="adminUsernameDisplay">Task Panel</h1></div>
+    <ul class="nav-list">
+      <li><a href="#" class="nav-link active" data-view="view-dashboard"><i class="fas fa-chart-line"></i><span class="nav-text">Dashboard</span></a></li>
+      <li><a href="#" class="nav-link" data-view="view-team"><i class="fas fa-users"></i><span class="nav-text">Developer Team</span></a></li>
+      <li><a href="#" class="nav-link" data-view="view-submit"><i class="fas fa-plus-circle"></i><span class="nav-text">Submit Task</span></a></li>
+    </ul>
+    <a href="#" id="logoutBtn" class="nav-link logout-button"><i class="fas fa-sign-out-alt"></i><span class="nav-text">Logout</span></a>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <section id="view-dashboard" class="view active">
+      <div class="view-header"><h2>Active Tasks</h2></div>
+      <div class="card"><table class="styled-table"><thead><tr><th>User</th><th>Title</th><th>Description</th><th>Duration</th><th>Remaining</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminTasksTableBody"></tbody></table></div>
+    </section>
+
+    <section id="view-team" class="view">
+      <div class="view-header"><h2>Developer Team</h2></div>
+      <div class="card"><table id="developerTable" class="styled-table"><thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead><tbody id="developerTableBody"></tbody></table></div>
+    </section>
+
+    <section id="view-submit" class="view">
+      <div class="view-header"><h2>Submit New Task</h2></div>
+      <div class="card">
+        <form id="taskForm">
+          <div class="form-group">
+            <label for="taskTitle" hidden>Task Title</label>
+            <input type="text" id="taskTitle" placeholder="📋 Task Title" required />
+
+            <label for="userNameSelect" hidden>Assign Developer</label>
+            <select id="userNameSelect" required>
+              <option value="" disabled selected>👤 Assign to Developer</option>
+            </select>
+          </div>
+
+          <label for="taskDesc" hidden>Task Description</label>
+          <textarea id="taskDesc" placeholder="📝 Task Description (minimum 10 characters)" required minlength="10"></textarea>
+
+          <label for="taskTime" hidden>Duration</label>
+          <input type="text" id="taskTime" placeholder="⏱️ Duration (e.g., 2h 30m, 120m, 90s)" required />
+
+          <button type="submit">🚀 Submit Task</button>
+        </form>
+        <p id="statusMessage"></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Confirmation Modal (shared) -->
+  <div id="confirmationModal" class="modal-overlay hidden">
+      <div class="confirmation-modal">
+          <p id="modalMessage">Are you sure?</p>
+          <div class="modal-buttons">
+              <button id="confirmNo" class="modal-btn cancel-btn">No</button>
+              <button id="confirmYes" class="modal-btn confirm-btn">Yes</button>
+          </div>
+      </div>
+  </div>
+
+  <script>
+    // --- Constants and Global State ---
+    const TASK_STATUS = {
+        PENDING: "pending",
+        IN_PROGRESS: "in-progress",
+        COMPLETED: "completed"
+    };
+
+    // Global storage simulation (replacing localStorage)
+    let appData = {
+        users: [], // Will store user/admin data, fetched from login.json
+        tasks: [], // Will store tasks fetched from tasks.json AND persisted in localStorage
+        loggedInUser: null // Managed via sessionStorage
+    };
+
+    // --- Data Management (using sessionStorage for loggedInUser and localStorage for tasks) ---
+    async function initializeData() {
+        // Fetch users from login.json
+        try {
+            const response = await fetch('login.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            appData.users = await response.json();
+        } catch (error) {
+            console.error('Error fetching login.json:', error);
+            // Fallback to hardcoded users if fetching fails
+            appData.users = [
+                { id: 'admin123', username: 'admin', password: 'adminpassword', role: 'admin', name: 'Admin User', email: 'admin@example.com', designation: 'System Administrator', status: 'Available' },
+                { id: 'dev_yasir', username: 'yasir', password: 'yasirpass', role: 'user', name: 'Yasir', email: 'yasir@example.com', designation: 'UI Designer', status: 'Available' },
+                { id: 'dev_maaz', username: 'maaz', password: 'maazpass', role: 'user', name: 'Maaz', email: 'maaz@example.com', designation: 'Frontend Dev', status: 'Available' }
+            ];
+        }
+
+        // Fetch tasks from tasks.json OR load from localStorage
+        try {
+            const savedTasks = localStorage.getItem('tasks');
+            if (savedTasks) {
+                appData.tasks = JSON.parse(savedTasks);
+            } else {
+                const response = await fetch('tasks.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                appData.tasks = await response.json();
+                localStorage.setItem('tasks', JSON.stringify(appData.tasks)); // Save initial fetch to localStorage
+            }
+        } catch (error) {
+            console.error('Error fetching or loading tasks.json/localStorage:', error);
+            appData.tasks = []; // Fallback to empty array if all fails
+        }
+
+        // Attempt to retrieve loggedInUser from sessionStorage on page load
+        const storedUser = sessionStorage.getItem('loggedInUser');
+        if (storedUser) {
+            appData.loggedInUser = JSON.parse(storedUser);
+        } else {
+            appData.loggedInUser = null; // Ensure it's null if nothing in sessionStorage
+        }
+    }
+
+    function getUsers() {
+        return appData.users;
+    }
+
+    function getTasks() {
+        return appData.tasks;
+    }
+
+    function saveTasks(tasks) {
+        appData.tasks = tasks;
+        localStorage.setItem('tasks', JSON.stringify(appData.tasks)); // Persist tasks to localStorage
+    }
+
+    function getLoggedInUser() {
+        // Retrieve from sessionStorage directly to ensure persistence
+        const storedUser = sessionStorage.getItem('loggedInUser');
+        return storedUser ? JSON.parse(storedUser) : null;
+    }
+
+    function setLoggedInUser(user) {
+        appData.loggedInUser = user; // Update in-memory appData for immediate use
+        if (user) {
+            sessionStorage.setItem('loggedInUser', JSON.stringify(user)); // Persist to sessionStorage
+        } else {
+            sessionStorage.removeItem('loggedInUser'); // Remove from sessionStorage on logout
+        }
+    }
+
+    // --- Authentication ---
+    function logout() {
+        setLoggedInUser(null); // Clear logged-in user from appData and sessionStorage
+        window.location.href = 'login.html'; // Redirect to login page
+    }
+
+    function handleLogin(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const userRoleRadio = document.getElementById('userRole');
+        const adminRoleRadio = document.getElementById('adminRole');
+        const errorMessageDiv = document.getElementById('errorMessage');
+
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+        const selectedRole = userRoleRadio.checked ? userRoleRadio.value : adminRoleRadio.checked ? adminRoleRadio.value : null;
+
+        errorMessageDiv.textContent = ''; // Clear previous error messages
+        errorMessageDiv.classList.remove('visible'); // Hide error styling
+
+        if (!username || !password || !selectedRole) {
+            errorMessageDiv.textContent = 'Please enter username, password, and select a role.';
+            errorMessageDiv.classList.add('visible');
+            return;
+        }
+
+        const foundUser = appData.users.find(user =>
+            user.username === username &&
+            user.password === password &&
+            user.role === selectedRole
+        );
+
+        if (foundUser) {
+            setLoggedInUser(foundUser); // This now saves to sessionStorage
+            if (foundUser.role === 'user') {
+                window.location.href = 'user-dashboard.html';
+            } else if (foundUser.role === 'admin') {
+                window.location.href = 'admin-dashboard.html';
+            }
+        } else {
+            errorMessageDiv.textContent = 'Invalid username, password, or role.';
+            errorMessageDiv.classList.add('visible'); // Show error message
+        }
+    }
+
+    // --- UI Navigation & Page Management (for Dashboards) ---
+    function navigateTo(pageId) {
+        document.querySelectorAll('.view').forEach(page => {
+            page.classList.remove('active');
+        });
+        const targetView = document.getElementById(pageId);
+        if (targetView) {
+            targetView.classList.add('active');
+        }
+
+        // Update nav link active state
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        const targetLink = document.querySelector(`[data-view="${pageId}"]`);
+        if (targetLink) {
+            targetLink.classList.add('active');
+        }
+    }
+
+    // --- UI Components & Helpers ---
+    function showModal(message, callback) {
+        const modal = document.getElementById('confirmationModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+
+        if (!modal || !modalMessage || !confirmYes || !confirmNo) {
+            console.error("Modal elements not found. Skipping modal display.");
+            callback(false); // Assume no confirmation if modal elements are missing
+            return;
+        }
+
+        modalMessage.textContent = message;
+        modal.classList.remove('hidden');
+
+        const yesListener = () => {
+            callback(true);
+            cleanup();
+        };
+        const noListener = () => {
+            callback(false);
+            cleanup();
+        };
+
+        confirmYes.addEventListener('click', yesListener);
+        confirmNo.addEventListener('click', noListener);
+
+        function cleanup() {
+            modal.classList.add('hidden');
+            confirmYes.removeEventListener('click', yesListener);
+            confirmNo.removeEventListener('click', noListener);
+        }
+    }
+
+    function formatTime(seconds) {
+        if (typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) return 'N/A';
+        if (seconds === 0) return '0s';
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h > 0 ? h + 'h ' : ''}${m > 0 ? m + 'm ' : ''}${s > 0 ? s + 's' : ''}`.trim();
+    }
+
+    function parseDuration(input) {
+        input = input.trim().toLowerCase();
+        const hoursMatch = input.match(/(\d+(?:\.\d+)?)\s*h/);
+        const minutesMatch = input.match(/(\d+(?:\.\d+)?)\s*m/);
+        const secondsMatch = input.match(/(\d+(?:\.\d+)?)\s*s/);
+        let totalSeconds = 0;
+        if (hoursMatch) totalSeconds += parseFloat(hoursMatch[1]) * 3600;
+        if (minutesMatch) totalSeconds += parseFloat(minutesMatch[1]) * 60;
+        if (secondsMatch) totalSeconds += parseFloat(secondsMatch[1]);
+        return totalSeconds > 0 ? Math.floor(totalSeconds) : null;
+    }
+
+    function showStatus(message, type = "success") {
+        const statusMessage = document.getElementById('statusMessage');
+        if (!statusMessage) {
+            console.warn("Status message element not found.");
+            return;
+        }
+        const colors = {
+            success: "var(--success)",
+            error: "var(--error)",
+            warning: "var(--warning)"
+        };
+
+        statusMessage.textContent = message;
+        statusMessage.style.color = colors[type];
+        statusMessage.style.backgroundColor = `${colors[type]}20`;
+        statusMessage.style.borderLeft = `4px solid ${colors[type]}`;
+        statusMessage.classList.add("visible");
+
+        if (type !== "error") {
+            setTimeout(() => statusMessage.classList.remove("visible"), 4000);
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // --- Task Management (for User Dashboard) - Included for completeness but not directly used by admin-dashboard.html's rendering ---
+    function renderUserTasks() {
+        const tasksTableBody = document.getElementById('userTasksTableBody'); // This ID is specific to user-dashboard.html
+        if (!tasksTableBody) return;
+
+        tasksTableBody.innerHTML = '';
+        const loggedInUser = getLoggedInUser();
+        if (!loggedInUser || loggedInUser.role !== 'user') {
+            tasksTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Please log in as a user to see your tasks.</td></tr>';
+            return;
+        }
+
+        const userTasks = getTasks().filter(task => task.createdBy === loggedInUser.id);
+
+        if (userTasks.length === 0) {
+            tasksTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">No tasks yet. Click "Add Task" to create one! 🚀</td></tr>';
+            return;
+        }
+
+        userTasks.forEach(task => {
+            const row = tasksTableBody.insertRow();
+            row.innerHTML = `
+                <td><span class="task-title">${escapeHtml(task.title)}</span></td>
+                <td>${escapeHtml(task.description)}</td>
+                <td>${formatTime(task.duration)}</td>
+                <td>${formatTime(task.remaining)}</td>
+                <td><span class="status-badge ${task.status}">${task.status.replace('-', ' ')}</span></td>
+                <td>
+                    ${task.status !== TASK_STATUS.COMPLETED ?
+                    `<button class="action-btn complete-btn" onclick="markTaskComplete('${task.id}')">
+                        Complete
+                    </button>` :
+                    '<span style="color: #10b981; font-weight: 500;">✓ Done</span>'
+                    }
+                </td>
+            `;
+        });
+    }
+
+    function submitNewTask(event) { // For user dashboard's add task
+        event.preventDefault();
+        const taskTitle = document.getElementById('taskTitle').value.trim();
+        const taskDurationInput = document.getElementById('taskDuration').value.trim();
+        const taskDescription = document.getElementById('taskDescription').value.trim();
+
+        if (!taskTitle || !taskDurationInput || !taskDescription) {
+            showStatus('Please fill in all fields.', 'error');
+            return;
+        }
+
+        if (taskDescription.length < 10) {
+            showStatus('Task description must be at least 10 characters long.', 'error');
+            return;
+        }
+
+        const durationSeconds = parseDuration(taskDurationInput);
+        if (durationSeconds === null) {
+            showStatus("Invalid duration format. Use 'h' for hours, 'm' for minutes, 's' for seconds (e.g., '1h 30m', '90s').", 'warning');
+            return;
+        }
+
+        const loggedInUser = getLoggedInUser();
+        if (!loggedInUser || loggedInUser.role !== 'user') {
+            showStatus('You must be logged in as a user to create tasks.', 'error');
+            return;
+        }
+
+        let allTasks = getTasks();
+
+        const newTask = {
+            id: `task_${Date.now()}`,
+            title: taskTitle,
+            description: taskDescription,
+            duration: durationSeconds,
+            remaining: durationSeconds,
+            status: TASK_STATUS.PENDING,
+            createdBy: loggedInUser.id,
+            createdAt: new Date().toISOString()
+        };
+
+        allTasks.push(newTask);
+        saveTasks(allTasks);
+
+        document.getElementById('submitTaskForm').reset();
+        navigateTo('view-tasks');
+        renderUserTasks();
+        showStatus('Task added successfully!', 'success');
+    }
+
+    function markTaskComplete(taskId) { // For user dashboard's complete task
+        showModal('Are you sure you want to mark this task as completed?', (confirmed) => {
+            if (confirmed) {
+                let allTasks = getTasks();
+                const taskIndex = allTasks.findIndex(t => t.id === taskId);
+                if (taskIndex !== -1) {
+                    allTasks[taskIndex].status = TASK_STATUS.COMPLETED;
+                    allTasks[taskIndex].remaining = 0;
+                    saveTasks(allTasks);
+                    renderUserTasks();
+                    showStatus('Task marked as completed!', 'success');
+                }
+            }
+        });
+    }
+
+    function updateUserTaskTimers() { // For user dashboard's timers
+        const loggedInUser = getLoggedInUser();
+        if (!loggedInUser || !document.body.classList.contains('user-dashboard-page')) {
+            return;
+        }
+
+        let allTasks = getTasks();
+        let tasksUpdated = false;
+
+        allTasks.forEach(task => {
+            if (task.createdBy === loggedInUser.id) {
+                if (task.status === TASK_STATUS.PENDING) {
+                    task.status = TASK_STATUS.IN_PROGRESS;
+                    tasksUpdated = true;
+                }
+
+                if (task.status === TASK_STATUS.IN_PROGRESS) {
+                    if (task.remaining > 0) {
+                        task.remaining -= 1;
+                        tasksUpdated = true;
+                    } else if (task.remaining <= 0 && task.status !== TASK_STATUS.COMPLETED) {
+                        task.status = TASK_STATUS.COMPLETED;
+                        tasksUpdated = true;
+                    }
+                }
+            }
+        });
+
+        if (tasksUpdated) {
+            saveTasks(allTasks);
+            if (document.getElementById('view-tasks') && document.getElementById('view-tasks').classList.contains('active')) {
+                renderUserTasks();
+            }
+        }
+    }
+
+    // --- Profile Management (for User Dashboard) - Included for completeness but not directly used by admin-dashboard.html's rendering ---
+    function renderUserProfile() {
+        const loggedInUser = getLoggedInUser();
+        if (loggedInUser) {
+            document.getElementById('profileUsername').textContent = loggedInUser.username || 'N/A';
+            document.getElementById('profileEmail').textContent = loggedInUser.email || 'N/A';
+
+            const userTasks = getTasks().filter(task => task.createdBy === loggedInUser.id);
+            const totalUserTasks = userTasks.length;
+            const pendingUserTasks = userTasks.filter(task => task.status === TASK_STATUS.PENDING).length;
+            const inProgressUserTasks = userTasks.filter(task => task.status === TASK_STATUS.IN_PROGRESS).length;
+            const completedUserTasks = userTasks.filter(task => task.status === TASK_STATUS.COMPLETED).length;
+
+            const profileTotalTasks = document.getElementById('profileTotalTasks');
+            const profilePendingTasks = document.getElementById('profilePendingTasks');
+            const profileInProgressTasks = document.getElementById('profileInProgressTasks');
+            const profileCompletedTasks = document.getElementById('profileCompletedTasks');
+
+            if (profileTotalTasks) profileTotalTasks.textContent = totalUserTasks;
+            if (profilePendingTasks) profilePendingTasks.textContent = pendingUserTasks;
+            if (profileInProgressTasks) profileInProgressTasks.textContent = inProgressUserTasks;
+            if (profileCompletedTasks) profileCompletedTasks.textContent = completedUserTasks;
+
+        } else {
+            document.getElementById('profileUsername').textContent = 'Not logged in';
+            document.getElementById('profileEmail').textContent = 'N/A';
+            if (document.getElementById('profileTotalTasks')) document.getElementById('profileTotalTasks').textContent = 'N/A';
+            if (document.getElementById('profilePendingTasks')) document.getElementById('profilePendingTasks').textContent = 'N/A';
+            if (document.getElementById('profileInProgressTasks')) document.getElementById('profileInProgressTasks').textContent = 'N/A';
+            if (document.getElementById('profileCompletedTasks')) document.getElementById('profileCompletedTasks').textContent = 'N/A';
+        }
+    }
+
+    // --- Admin Dashboard Specific Functions ---
+    function renderAdminTasks() {
+        const adminTasksTableBody = document.getElementById('adminTasksTableBody');
+        if (!adminTasksTableBody) return;
+
+        adminTasksTableBody.innerHTML = '';
+        const allTasks = getTasks();
+        const allUsers = getUsers();
+
+        if (allTasks.length === 0) {
+            adminTasksTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">No tasks found.</td></tr>';
+            return;
+        }
+
+        allTasks.forEach(task => {
+            const createdByUser = allUsers.find(user => user.id === task.createdBy);
+            const assignedToName = createdByUser ? createdByUser.name || createdByUser.username : 'Unknown';
+
+            const row = adminTasksTableBody.insertRow();
+            row.innerHTML = `
+                <td><span class="badge">${escapeHtml(assignedToName)}</span></td>
+                <td>${escapeHtml(task.title)}</td>
+                <td>${escapeHtml(task.description)}</td>
+                <td>${formatTime(task.duration)}</td>
+                <td>${formatTime(task.remaining)}</td>
+                <td><span class="status-badge ${task.status}">${task.status.replace('-', ' ')}</span></td>
+                <td>
+                    ${task.status !== TASK_STATUS.COMPLETED ?
+                    `<button class="action-btn complete-btn" data-task-id="${task.id}">
+                        Complete
+                    </button>` :
+                    '<span style="color: #10b981; font-weight: 500;">✓ Done</span>'
+                    }
+                </td>
+            `;
+        });
+    }
+
+    function renderDevelopers() {
+        const developerTableBody = document.getElementById('developerTableBody');
+        if (!developerTableBody) return;
+
+        developerTableBody.innerHTML = "";
+        const developers = getUsers().filter(user => user.role === 'user');
+
+        if (developers.length === 0) {
+            developerTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 40px;">No developers found.</td></tr>';
+            return;
+        }
+
+        developers.forEach(dev => {
+            const isBusy = getTasks().some(t => t.createdBy === dev.id && t.status !== TASK_STATUS.COMPLETED);
+            const statusClass = isBusy ? 'locked' : 'available';
+            const badgeClass = (dev.designation || '').toLowerCase().replace(/ /g, '-');
+
+            const tr = developerTableBody.insertRow();
+            tr.innerHTML = `
+                <td>${escapeHtml(dev.name || dev.username)}</td>
+                <td><span class="badge ${badgeClass}">${escapeHtml(dev.designation || 'N/A')}</span></td>
+                <td class="occupancy ${statusClass}">${isBusy ? 'Locked' : 'Available'}</td>
+            `;
+        });
+    }
+
+    function populateDeveloperDropdown() {
+        const userSelect = document.getElementById('userNameSelect');
+        if (!userSelect) return;
+
+        userSelect.innerHTML = '<option value="" disabled selected>👤 Assign to Developer</option>';
+        const developers = getUsers().filter(user => user.role === 'user');
+
+        developers.forEach(dev => {
+            const option = document.createElement('option');
+            option.value = dev.id;
+            option.textContent = `${dev.name || dev.username} (${dev.designation || 'User'})`;
+            userSelect.appendChild(option);
+        });
+    }
+
+    function submitNewTaskAdmin(event) {
+        event.preventDefault();
+        const taskTitle = document.getElementById('taskTitle').value.trim();
+        const assignedToId = document.getElementById('userNameSelect').value;
+        const taskDescription = document.getElementById('taskDesc').value.trim();
+        const taskDurationInput = document.getElementById('taskTime').value.trim();
+
+        if (!taskTitle || !assignedToId || !taskDescription || !taskDurationInput) {
+            showStatus('Please fill in all fields.', 'error');
+            return;
+        }
+
+        if (taskDescription.length < 10) {
+            showStatus('Task description must be at least 10 characters long.', 'error');
+            return;
+        }
+
+        const durationSeconds = parseDuration(taskDurationInput);
+        if (durationSeconds === null || durationSeconds <= 0) {
+            showStatus("Invalid duration format. Use 'h' for hours, 'm' for minutes, 's' for seconds (e.g., '1h 30m', '90s').", 'warning');
+            return;
+        }
+
+        const loggedInUser = getLoggedInUser();
+        if (!loggedInUser || loggedInUser.role !== 'admin') {
+            showStatus('You must be logged in as an admin to create tasks.', 'error');
+            return;
+        }
+
+        let allTasks = getTasks();
+
+        const newTask = {
+            id: `task_${Date.now()}`,
+            title: taskTitle,
+            description: taskDescription,
+            duration: durationSeconds,
+            remaining: durationSeconds,
+            status: TASK_STATUS.PENDING,
+            createdBy: assignedToId,
+            assignedBy: loggedInUser.id,
+            createdAt: new Date().toISOString()
+        };
+
+        allTasks.push(newTask);
+        saveTasks(allTasks);
+
+        document.getElementById('taskForm').reset();
+        navigateTo('view-dashboard');
+        renderAdminTasks();
+        renderDevelopers();
+        showStatus('Task added successfully by admin!', 'success');
+    }
+
+    function markTaskCompleteAdmin(taskId) {
+        showModal('Are you sure you want to mark this task as completed?', (confirmed) => {
+            if (confirmed) {
+                let allTasks = getTasks();
+                const taskIndex = allTasks.findIndex(t => t.id === taskId);
+                if (taskIndex !== -1) {
+                    allTasks[taskIndex].status = TASK_STATUS.COMPLETED;
+                    allTasks[taskIndex].remaining = 0;
+                    saveTasks(allTasks);
+                    renderAdminTasks();
+                    renderDevelopers();
+                    showStatus('Task marked as completed by admin!', 'success');
+                }
+            }
+        });
+    }
+
+    function updateAdminTaskTimers() {
+        const loggedInUser = getLoggedInUser();
+        if (!loggedInUser || loggedInUser.role !== 'admin' || !document.body.classList.contains('admin-dashboard-page')) {
+            return;
+        }
+
+        let allTasks = getTasks();
+        let tasksUpdated = false;
+
+        allTasks.forEach(task => {
+            if (task.status === TASK_STATUS.PENDING) {
+                task.status = TASK_STATUS.IN_PROGRESS;
+                tasksUpdated = true;
+            }
+
+            if (task.status === TASK_STATUS.IN_PROGRESS) {
+                if (task.remaining > 0) {
+                    task.remaining -= 1;
+                    tasksUpdated = true;
+                } else if (task.remaining <= 0 && task.status !== TASK_STATUS.COMPLETED) {
+                    task.status = TASK_STATUS.COMPLETED;
+                    tasksUpdated = true;
+                }
+            }
+        });
+
+        if (tasksUpdated) {
+            saveTasks(allTasks);
+            if (document.getElementById('view-dashboard') && document.getElementById('view-dashboard').classList.contains('active')) {
+                renderAdminTasks();
+            }
+            renderDevelopers();
+        }
+    }
+
+
+    // --- Page Initialization ---
+    document.addEventListener('DOMContentLoaded', async () => {
+        await initializeData();
+
+        // Check if on login page (this script is primarily for dashboards, but includes login logic for completeness)
+        if (document.body.classList.contains('login-page')) {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+                const errorMessageDiv = document.getElementById('errorMessage');
+                if (errorMessageDiv) {
+                    errorMessageDiv.classList.remove('visible');
+                    errorMessageDiv.textContent = '';
+                }
+            }
+        } else {
+            // For dashboard pages
+            const loggedInUser = getLoggedInUser();
+            if (!loggedInUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Set username display in sidebar
+            const usernameDisplay = document.getElementById('usernameDisplay') || document.getElementById('adminUsernameDisplay');
+            if (usernameDisplay) {
+                usernameDisplay.textContent = loggedInUser.username;
+            }
+
+            // Event Listeners for navigation (shared for both dashboards)
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.id !== 'logoutBtn') {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const viewId = link.dataset.view;
+                        if (viewId) {
+                            navigateTo(viewId);
+                            // Call render functions specific to the view
+                            if (viewId === 'view-profile' && loggedInUser.role === 'user') {
+                                renderUserProfile();
+                            } else if (viewId === 'view-dashboard' && loggedInUser.role === 'admin') {
+                                renderAdminTasks();
+                            } else if (viewId === 'view-team' && loggedInUser.role === 'admin') {
+                                renderDevelopers();
+                            } else if (viewId === 'view-submit' && loggedInUser.role === 'admin') {
+                                populateDeveloperDropdown();
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Logout button listener (shared)
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener("click", e => {
+                    e.preventDefault();
+                    logout();
+                });
+            }
+
+            // Initialize UI based on user role
+            if (loggedInUser.role === 'user') {
+                document.body.classList.add('user-dashboard-page');
+                renderUserTasks();
+                setInterval(updateUserTaskTimers, 1000);
+
+                const submitTaskForm = document.getElementById('submitTaskForm');
+                if (submitTaskForm) {
+                    submitTaskForm.addEventListener('submit', submitNewTask);
+                }
+            } else if (loggedInUser.role === 'admin') {
+                document.body.classList.add('admin-dashboard-page');
+                renderAdminTasks();
+                renderDevelopers();
+                populateDeveloperDropdown();
+                setInterval(updateAdminTaskTimers, 1000);
+
+                const taskForm = document.getElementById('taskForm');
+                if (taskForm) {
+                    taskForm.addEventListener('submit', submitNewTaskAdmin);
+                    const adminTasksTableBody = document.getElementById('adminTasksTableBody');
+                    if (adminTasksTableBody) {
+                        adminTasksTableBody.addEventListener('click', (e) => {
+                            const btn = e.target.closest('.complete-btn');
+                            if (btn && btn.dataset.taskId) {
+                                markTaskCompleteAdmin(btn.dataset.taskId);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+    });
+  </script>
+
+</body>
+</html>
