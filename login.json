@@ -9,7 +9,7 @@
     "designation": "System Administrator",
     "status": "Available"
   },
-  
+ 
   {
     "id": "dev_yasir",
     "username": "yasir",
@@ -61,13 +61,15 @@
     "status": "Available"
   },
   {
-    "id": "dev_esha",
-    "password": "eshapass",
-    "role": "user",
-    "name": "Esha",
-    "email": "esha@example.com",
-    "designation": "QA Engineer",
-    "status": "Available"
+   
+  "id": "dev_esha",
+  "username": "esha",
+  "password": "eshapass",
+  "role": "user",
+  "name": "Esha",
+  "email": "esha@example.com",
+  "designation": "QA Engineer",
+  "status": "Available"
   },
   {
     "id": "dev_tayyeba",
@@ -87,6 +89,16 @@
     "name": "Meerza",
     "email": "meerza@example.com",
     "designation": "Support",
+    "status": "Available"
+  },
+  {
+   "id": "dev_areesh",
+    "username": "areesh",
+    "password": "areeshpass",
+    "role": "user",
+    "name": "Areesh",
+    "email": "areesh@example.com",
+    "designation": "Developer",
     "status": "Available"
   }
 ]

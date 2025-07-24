@@ -20,6 +20,9 @@
         --error: #ef4444;
         --warning: #f59e0b;
         --info: #3b82f6;
+        --bug-color: #ef4444; /* Red for Bug */
+        --story-color: #3b82f6; /* Blue for Story */
+        --task-color: #f59e0b; /* Orange for Task */
     }
  
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -361,6 +364,33 @@
     span.status-badge.completed {
         background-color: var(--success); /* Green */
     }
+    
+    /* NEW: Paired Status Badge */
+    span.status-badge.paired {
+        background-color: var(--primary-color); /* Use primary color for paired status */
+    }
+
+    /* NEW: Task Type Badges */
+    span.task-type-badge {
+        padding: 4px 10px;
+        border-radius: 6px;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+
+    span.task-type-badge.bug {
+        background-color: var(--bug-color); /* Red */
+    }
+
+    span.task-type-badge.story {
+        background-color: var(--story-color); /* Blue */
+    }
+
+    span.task-type-badge.task {
+        background-color: var(--task-color); /* Orange */
+    }
  
     /* Action Buttons within tables */
     button.action-btn {
@@ -402,6 +432,19 @@
         gap: 20px;
         flex-wrap: wrap; /* Allows inputs to wrap on smaller screens */
     }
+    
+    /* NEW: Styles for individual form items within form-group */
+    .form-group > div {
+        flex: 1; /* Allow each form item to grow */
+        min-width: 200px; /* Ensure they don't get too small */
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
  
     input,
     textarea,
@@ -411,9 +454,10 @@
         border-radius: 8px;
         font-family: inherit;
         font-size: 1rem;
-        flex: 1; /* Allows inputs to take available space */
+        width: 100%; /* Ensure select takes full width */
         transition: all 0.3s ease;
         background: #f9fafb;
+        box-sizing: border-box; /* Crucial for consistent width */
     }
  
     textarea {
@@ -644,6 +688,12 @@
         .form-group {
             flex-direction: column;
         }
+        
+        /* NEW: Adjust form group for smaller screens */
+        .form-group > div {
+            min-width: unset;
+            width: 100%;
+        }
  
         .login-container {
             padding: 30px 20px;
@@ -687,7 +737,6 @@
 </head>
 <body>
 
-  <!-- Sidebar -->
   <nav class="sidebar">
     <div class="sidebar-header"><i class="fas fa-tasks"></i><h1 id="adminUsernameDisplay">Task Panel</h1></div>
     <ul class="nav-list">
@@ -698,16 +747,45 @@
     <a href="#" id="logoutBtn" class="nav-link logout-button"><i class="fas fa-sign-out-alt"></i><span class="nav-text">Logout</span></a>
   </nav>
 
-  <!-- Main Content -->
   <main class="main-content">
     <section id="view-dashboard" class="view active">
       <div class="view-header"><h2>Active Tasks</h2></div>
-      <div class="card"><table class="styled-table"><thead><tr><th>User</th><th>Title</th><th>Description</th><th>Duration</th><th>Remaining</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminTasksTableBody"></tbody></table></div>
+      <div class="card">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Pair Programmer</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Duration</th>
+                    <th>Remaining</th>
+                    <th>Paired?</th> 
+                    <th>Task Type</th> <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="adminTasksTableBody">
+                </tbody>
+        </table>
+      </div>
     </section>
 
     <section id="view-team" class="view">
       <div class="view-header"><h2>Developer Team</h2></div>
-      <div class="card"><table id="developerTable" class="styled-table"><thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead><tbody id="developerTableBody"></tbody></table></div>
+      <div class="card">
+        <table id="developerTable" class="styled-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="developerTableBody">
+                </tbody>
+        </table>
+      </div>
     </section>
 
     <section id="view-submit" class="view">
@@ -715,13 +793,35 @@
       <div class="card">
         <form id="taskForm">
           <div class="form-group">
-            <label for="taskTitle" hidden>Task Title</label>
-            <input type="text" id="taskTitle" placeholder="📋 Task Title" required />
+            <div>
+              <label for="taskTitle">Task Title</label>
+              <input type="text" id="taskTitle" placeholder="📋 Task Title" required />
+            </div>
 
-            <label for="userNameSelect" hidden>Assign Developer</label>
-            <select id="userNameSelect" required>
-              <option value="" disabled selected>👤 Assign to Developer</option>
-            </select>
+            <div>
+              <label for="userNameSelect">Assign Developer</label>
+              <select id="userNameSelect" required>
+                <option value="" disabled selected>👤 Assign to Developer</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <div>
+              <label for="pairProgrammerSelect">Pair Programmer</label>
+              <select id="pairProgrammerSelect">
+                  <option value="">-- Select Pair Programmer (Optional) --</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="taskTypeSelect">Task Type</label>
+              <select id="taskTypeSelect" required>
+                  <option value="Task">Task</option>
+                  <option value="Story">Story</option>
+                  <option value="Bug">Bug</option>
+              </select>
+            </div>
           </div>
 
           <label for="taskDesc" hidden>Task Description</label>
@@ -737,7 +837,6 @@
     </section>
   </main>
 
-  <!-- Confirmation Modal (shared) -->
   <div id="confirmationModal" class="modal-overlay hidden">
       <div class="confirmation-modal">
           <p id="modalMessage">Are you sure?</p>
@@ -778,7 +877,11 @@
             appData.users = [
                 { id: 'admin123', username: 'admin', password: 'adminpassword', role: 'admin', name: 'Admin User', email: 'admin@example.com', designation: 'System Administrator', status: 'Available' },
                 { id: 'dev_yasir', username: 'yasir', password: 'yasirpass', role: 'user', name: 'Yasir', email: 'yasir@example.com', designation: 'UI Designer', status: 'Available' },
-                { id: 'dev_maaz', username: 'maaz', password: 'maazpass', role: 'user', name: 'Maaz', email: 'maaz@example.com', designation: 'Frontend Dev', status: 'Available' }
+                { id: 'dev_maaz', username: 'maaz', password: 'maazpass', role: 'user', name: 'Maaz', email: 'maaz@example.com', designation: 'Frontend Dev', status: 'Available' },
+                { id: 'dev_ali', username: 'ali', password: 'alipass', role: 'user', name: 'Ali', email: 'ali@example.com', designation: 'Backend Dev', status: 'Available' },
+                { id: 'dev_sara', username: 'sara', password: 'sarapass', role: 'user', name: 'Sara', email: 'sara@example.com', designation: 'Fullstack Dev', status: 'Available' },
+                // NEW: Add Areesh to the user list
+                { id: 'dev_areesh', username: 'areesh', password: 'areeshpass', role: 'user', name: 'Areesh', email: 'areesh@example.com', designation: 'QA Engineer', status: 'Available' }
             ];
         }
 
@@ -792,7 +895,13 @@
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                appData.tasks = await response.json();
+                // Initial tasks.json might not have new fields, add them with defaults
+                const fetchedTasks = await response.json();
+                appData.tasks = fetchedTasks.map(task => ({
+                    ...task,
+                    pairProgrammerId: task.pairProgrammerId || null, // Ensure new field exists
+                    taskType: task.taskType || "Task" // Ensure new field exists
+                }));
                 localStorage.setItem('tasks', JSON.stringify(appData.tasks)); // Save initial fetch to localStorage
             }
         } catch (error) {
@@ -1066,7 +1175,10 @@
             remaining: durationSeconds,
             status: TASK_STATUS.PENDING,
             createdBy: loggedInUser.id,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            // New fields for user-submitted tasks (defaults for now)
+            pairProgrammerId: null,
+            taskType: "Task" 
         };
 
         allTasks.push(newTask);
@@ -1173,22 +1285,44 @@
         const allUsers = getUsers();
 
         if (allTasks.length === 0) {
-            adminTasksTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">No tasks found.</td></tr>';
+            adminTasksTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px;">No tasks found.</td></tr>'; // Adjusted colspan
             return;
         }
 
         allTasks.forEach(task => {
             const createdByUser = allUsers.find(user => user.id === task.createdBy);
             const assignedToName = createdByUser ? createdByUser.name || createdByUser.username : 'Unknown';
+            
+            // Get pair programmer's name if assigned
+            const pairProgrammerName = task.pairProgrammerId 
+                                        ? (allUsers.find(user => user.id === task.pairProgrammerId)?.name || 'Unknown') 
+                                        : 'None';
+            
+            // Determine "Paired?" column value
+            const isPaired = task.pairProgrammerId ? "Yes" : "No";
+
+            // Determine status display
+            let statusDisplayText = task.status.replace('-', ' ');
+            let statusBadgeClass = task.status;
+            if (task.pairProgrammerId && task.status !== TASK_STATUS.COMPLETED) { // Only show "Paired" if not completed
+                statusDisplayText = "Paired with " + escapeHtml(pairProgrammerName); // Modified: Display "Paired with [Name]"
+                statusBadgeClass = "paired"; // Use a specific class for styling
+            }
+
+            // Determine task type display
+            const taskTypeDisplayText = task.taskType || 'Task';
+            const taskTypeBadgeClass = (task.taskType || 'task').toLowerCase().replace(' ', '-'); // For CSS class: 'bug', 'story', 'task'
 
             const row = adminTasksTableBody.insertRow();
             row.innerHTML = `
                 <td><span class="badge">${escapeHtml(assignedToName)}</span></td>
+                <td><span class="badge">${escapeHtml(pairProgrammerName)}</span></td>
                 <td>${escapeHtml(task.title)}</td>
                 <td>${escapeHtml(task.description)}</td>
                 <td>${formatTime(task.duration)}</td>
                 <td>${formatTime(task.remaining)}</td>
-                <td><span class="status-badge ${task.status}">${task.status.replace('-', ' ')}</span></td>
+                <td>${isPaired}</td>
+                <td><span class="task-type-badge ${taskTypeBadgeClass}">${escapeHtml(taskTypeDisplayText)}</span></td> <td><span class="status-badge ${statusBadgeClass}">${statusDisplayText}</span></td>
                 <td>
                     ${task.status !== TASK_STATUS.COMPLETED ?
                     `<button class="action-btn complete-btn" data-task-id="${task.id}">
@@ -1207,6 +1341,7 @@
 
         developerTableBody.innerHTML = "";
         const developers = getUsers().filter(user => user.role === 'user');
+        const allTasks = getTasks(); // Fetch all tasks to check pairing status
 
         if (developers.length === 0) {
             developerTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 40px;">No developers found.</td></tr>';
@@ -1214,31 +1349,60 @@
         }
 
         developers.forEach(dev => {
-            const isBusy = getTasks().some(t => t.createdBy === dev.id && t.status !== TASK_STATUS.COMPLETED);
-            const statusClass = isBusy ? 'locked' : 'available';
+            const isBusyAsPrimary = allTasks.some(t => t.createdBy === dev.id && t.status !== TASK_STATUS.COMPLETED);
+            
+            let statusText = 'Available';
+            let statusClass = 'available';
+
+            if (isBusyAsPrimary) {
+                statusText = 'Locked (Primary)'; // If assigned as primary developer
+                statusClass = 'locked';
+            } else {
+                // Check if developer is assigned as a pair programmer to any *active* task
+                const pairedTask = allTasks.find(t => t.pairProgrammerId === dev.id && t.status !== TASK_STATUS.COMPLETED);
+                if (pairedTask) {
+                    const primaryDev = getUsers().find(user => user.id === pairedTask.createdBy);
+                    const primaryDevName = primaryDev ? (primaryDev.name || primaryDev.username) : 'Unknown';
+                    statusText = `Paired with ${escapeHtml(primaryDevName)}`; // Modified: Show who they are paired with
+                    statusClass = 'paired'; // You might want a different color for "Paired" status on developers
+                }
+            }
+
             const badgeClass = (dev.designation || '').toLowerCase().replace(/ /g, '-');
 
             const tr = developerTableBody.insertRow();
             tr.innerHTML = `
                 <td>${escapeHtml(dev.name || dev.username)}</td>
                 <td><span class="badge ${badgeClass}">${escapeHtml(dev.designation || 'N/A')}</span></td>
-                <td class="occupancy ${statusClass}">${isBusy ? 'Locked' : 'Available'}</td>
+                <td class="occupancy ${statusClass}">${statusText}</td>
             `;
         });
     }
 
     function populateDeveloperDropdown() {
         const userSelect = document.getElementById('userNameSelect');
-        if (!userSelect) return;
+        const pairProgrammerSelect = document.getElementById('pairProgrammerSelect'); // Get the new dropdown
+        
+        if (!userSelect || !pairProgrammerSelect) return;
 
+        // Clear existing options
         userSelect.innerHTML = '<option value="" disabled selected>👤 Assign to Developer</option>';
+        pairProgrammerSelect.innerHTML = '<option value="">-- Select Pair Programmer (Optional) --</option>'; // Add default for optional
+
         const developers = getUsers().filter(user => user.role === 'user');
 
         developers.forEach(dev => {
-            const option = document.createElement('option');
-            option.value = dev.id;
-            option.textContent = `${dev.name || dev.username} (${dev.designation || 'User'})`;
-            userSelect.appendChild(option);
+            // For Assign Developer dropdown
+            const optionUser = document.createElement('option');
+            optionUser.value = dev.id;
+            optionUser.textContent = `${dev.name || dev.username} (${dev.designation || 'User'})`;
+            userSelect.appendChild(optionUser);
+
+            // For Pair Programmer dropdown
+            const optionPair = document.createElement('option');
+            optionPair.value = dev.id;
+            optionPair.textContent = `${dev.name || dev.username} (${dev.designation || 'User'})`;
+            pairProgrammerSelect.appendChild(optionPair);
         });
     }
 
@@ -1246,11 +1410,13 @@
         event.preventDefault();
         const taskTitle = document.getElementById('taskTitle').value.trim();
         const assignedToId = document.getElementById('userNameSelect').value;
+        const pairProgrammerId = document.getElementById('pairProgrammerSelect').value || null; // NEW: Get pair programmer ID
+        const taskType = document.getElementById('taskTypeSelect').value; // NEW: Get task type
         const taskDescription = document.getElementById('taskDesc').value.trim();
         const taskDurationInput = document.getElementById('taskTime').value.trim();
 
-        if (!taskTitle || !assignedToId || !taskDescription || !taskDurationInput) {
-            showStatus('Please fill in all fields.', 'error');
+        if (!taskTitle || !assignedToId || !taskDescription || !taskDurationInput || !taskType) { // Ensure taskType is checked
+            showStatus('Please fill in all required fields (Task Title, Assign Developer, Task Type, Description, Duration).', 'error');
             return;
         }
 
@@ -1282,16 +1448,23 @@
             status: TASK_STATUS.PENDING,
             createdBy: assignedToId,
             assignedBy: loggedInUser.id,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            pairProgrammerId: pairProgrammerId, // NEW FIELD
+            taskType: taskType                  // NEW FIELD
         };
 
         allTasks.push(newTask);
         saveTasks(allTasks);
 
         document.getElementById('taskForm').reset();
-        navigateTo('view-dashboard');
+        // Reset dropdowns explicitly if `reset()` doesn't handle them for selected options
+        document.getElementById('userNameSelect').value = ""; // Reset to "Assign to Developer"
+        document.getElementById('pairProgrammerSelect').value = ""; // Reset to "-- Select Pair Programmer (Optional) --"
+        document.getElementById('taskTypeSelect').value = "Task"; // Reset to "Task"
+
+        navigateTo('view-dashboard'); // Navigate back to dashboard to see new task
         renderAdminTasks();
-        renderDevelopers();
+        renderDevelopers(); // Update developer statuses
         showStatus('Task added successfully by admin!', 'success');
     }
 
@@ -1322,28 +1495,33 @@
         let tasksUpdated = false;
 
         allTasks.forEach(task => {
-            if (task.status === TASK_STATUS.PENDING) {
-                task.status = TASK_STATUS.IN_PROGRESS;
-                tasksUpdated = true;
-            }
-
-            if (task.status === TASK_STATUS.IN_PROGRESS) {
-                if (task.remaining > 0) {
-                    task.remaining -= 1;
+            // Only update tasks that are not yet completed
+            if (task.status !== TASK_STATUS.COMPLETED) {
+                // If pending, change to in-progress
+                if (task.status === TASK_STATUS.PENDING) {
+                    task.status = TASK_STATUS.IN_PROGRESS;
                     tasksUpdated = true;
-                } else if (task.remaining <= 0 && task.status !== TASK_STATUS.COMPLETED) {
-                    task.status = TASK_STATUS.COMPLETED;
-                    tasksUpdated = true;
+                }
+                // If in-progress, decrement remaining time
+                if (task.status === TASK_STATUS.IN_PROGRESS) {
+                    if (task.remaining > 0) {
+                        task.remaining -= 1;
+                        tasksUpdated = true;
+                    } else if (task.remaining <= 0) {
+                        task.status = TASK_STATUS.COMPLETED; // Mark as completed if time runs out
+                        tasksUpdated = true;
+                    }
                 }
             }
         });
 
         if (tasksUpdated) {
             saveTasks(allTasks);
+            // Only re-render if the dashboard view is active to avoid unnecessary updates
             if (document.getElementById('view-dashboard') && document.getElementById('view-dashboard').classList.contains('active')) {
                 renderAdminTasks();
             }
-            renderDevelopers();
+            renderDevelopers(); // Always re-render developers to update their status
         }
     }
 
@@ -1353,6 +1531,7 @@
         await initializeData();
 
         // Check if on login page (this script is primarily for dashboards, but includes login logic for completeness)
+        // If this script is only for dashboardadmin.html, this login check can be removed or simplified.
         if (document.body.classList.contains('login-page')) {
             const loginForm = document.getElementById('loginForm');
             if (loginForm) {
@@ -1386,14 +1565,14 @@
                         if (viewId) {
                             navigateTo(viewId);
                             // Call render functions specific to the view
-                            if (viewId === 'view-profile' && loggedInUser.role === 'user') {
+                            if (viewId === 'view-profile' && loggedInUser.role === 'user') { // For user dashboard
                                 renderUserProfile();
-                            } else if (viewId === 'view-dashboard' && loggedInUser.role === 'admin') {
+                            } else if (viewId === 'view-dashboard' && loggedInUser.role === 'admin') { // For admin dashboard
                                 renderAdminTasks();
-                            } else if (viewId === 'view-team' && loggedInUser.role === 'admin') {
+                            } else if (viewId === 'view-team' && loggedInUser.role === 'admin') { // For admin dashboard
                                 renderDevelopers();
-                            } else if (viewId === 'view-submit' && loggedInUser.role === 'admin') {
-                                populateDeveloperDropdown();
+                            } else if (viewId === 'view-submit' && loggedInUser.role === 'admin') { // For admin dashboard
+                                populateDeveloperDropdown(); // Ensure both developer dropdowns are populated
                             }
                         }
                     });
@@ -1415,22 +1594,25 @@
                 renderUserTasks();
                 setInterval(updateUserTaskTimers, 1000);
 
-                const submitTaskForm = document.getElementById('submitTaskForm');
+                const submitTaskForm = document.getElementById('submitTaskForm'); // Assuming a form on user dashboard
                 if (submitTaskForm) {
                     submitTaskForm.addEventListener('submit', submitNewTask);
                 }
             } else if (loggedInUser.role === 'admin') {
                 document.body.classList.add('admin-dashboard-page');
-                renderAdminTasks();
-                renderDevelopers();
-                populateDeveloperDropdown();
-                setInterval(updateAdminTaskTimers, 1000);
+                renderAdminTasks(); // Initial render
+                renderDevelopers(); // Initial render
+                populateDeveloperDropdown(); // Initial population of all dropdowns
+
+                setInterval(updateAdminTaskTimers, 1000); // Start timer updates
 
                 const taskForm = document.getElementById('taskForm');
                 if (taskForm) {
-                    taskForm.addEventListener('submit', submitNewTaskAdmin);
+                    taskForm.addEventListener('submit', submitNewTaskAdmin); // Admin's task submission
+                    
                     const adminTasksTableBody = document.getElementById('adminTasksTableBody');
                     if (adminTasksTableBody) {
+                        // Event delegation for complete task buttons
                         adminTasksTableBody.addEventListener('click', (e) => {
                             const btn = e.target.closest('.complete-btn');
                             if (btn && btn.dataset.taskId) {

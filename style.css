@@ -292,42 +292,10 @@ body.login-page {
     border-radius: 25px;
     font-size: 0.8rem;
     font-weight: 500;
-    color: white; /* Changed to white for better contrast with various backgrounds */
+    color: rgb(14, 13, 13); /* Changed to white for better contrast with various backgrounds */
     display: inline-block;
 }
 
-.designer,
-.ui-designer {
-    background: #4CAF50; /* A shade of green */
-}
-
-.graphic-designer {
-    background: #00BCD4; /* Cyan */
-}
-
-.frontend-dev {
-    background: #2196F3; /* Blue */
-}
-
-.backend-dev {
-    background: #FF9800; /* Orange */
-}
-
-.fullstack-dev {
-    background: #F44336; /* Red */
-}
-
-.hr-manager {
-    background: #E91E63; /* Pink */
-}
-
-.qa-engineer {
-    background: #673AB7; /* Deep Purple */
-}
-
-.support {
-    background: #8BC34A; /* Light Green */
-}
 
 
 /* Occupancy Status */

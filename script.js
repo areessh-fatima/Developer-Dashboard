@@ -5,6 +5,11 @@ const TASK_STATUS = {
     COMPLETED: "completed"
 };
 
+const USER_STATUS = {
+    AVAILABLE: "available",
+    LOCKED: "locked"
+};
+
 // Global storage simulation (replacing localStorage)
 let appData = {
     users: [], // Will store sample user/admin data, fetched from login.json
@@ -12,22 +17,36 @@ let appData = {
     loggedInUser: null // This will now be primarily managed via sessionStorage
 };
 
-// --- Data Management (using sessionStorage for loggedInUser and localStorage for tasks) ---
+// --- Data Management (using sessionStorage for loggedInUser and localStorage for tasks and users) ---
 async function initializeData() { // Made async to await fetch
-    // Fetch users from login.json
+    // Fetch users from login.json or load from localStorage
     try {
-        const response = await fetch('login.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        const savedUsers = localStorage.getItem('users'); // Try to load from localStorage first
+        if (savedUsers) {
+            appData.users = JSON.parse(savedUsers);
+        } else {
+            const response = await fetch('login.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            appData.users = await response.json();
+            // Initialize default status if not present
+            appData.users.forEach(user => {
+                if (!user.status) {
+                    user.status = USER_STATUS.AVAILABLE;
+                }
+            });
+            localStorage.setItem('users', JSON.stringify(appData.users)); // Save initial fetch to localStorage
         }
-        appData.users = await response.json();
     } catch (error) {
-        console.error('Error fetching login.json:', error);
-        // Fallback to hardcoded users if fetching fails
+        console.error('Error fetching login.json or loading users from localStorage:', error);
+        // Fallback to hardcoded users if fetching fails or localStorage is corrupt
         appData.users = [
-            { id: 'user_demo_123', username: 'user', password: 'userpass', role: 'user', email: 'user@example.com' },
-            { id: 'admin_demo_456', username: 'admin', password: 'adminpass', role: 'admin', email: 'admin@example.com' }
+            { id: 'user_demo_123', username: 'user', password: 'userpass', role: 'user', email: 'user@example.com', name: 'Demo User', designation: 'Developer', status: USER_STATUS.AVAILABLE },
+            { id: 'user_demo_456', username: 'user2', password: 'userpass2', role: 'user', email: 'user2@example.com', name: 'Another User', designation: 'Developer', status: USER_STATUS.AVAILABLE },
+            { id: 'admin_demo_456', username: 'admin', password: 'adminpass', role: 'admin', email: 'admin@example.com', name: 'Admin User', designation: 'Administrator', status: USER_STATUS.AVAILABLE }
         ];
+        localStorage.setItem('users', JSON.stringify(appData.users)); // Save fallback users
     }
 
     // Fetch tasks from tasks.json OR load from localStorage
@@ -59,6 +78,11 @@ async function initializeData() { // Made async to await fetch
 
 function getUsers() {
     return appData.users;
+}
+
+function saveUsers(users) {
+    appData.users = users;
+    localStorage.setItem('users', JSON.stringify(appData.users)); // Persist users to localStorage
 }
 
 function getTasks() {
@@ -239,24 +263,27 @@ function renderUserTasks() {
     tasksTableBody.innerHTML = '';
     const loggedInUser = getLoggedInUser(); // Now correctly retrieves from sessionStorage
     if (!loggedInUser || loggedInUser.role !== 'user') {
-        tasksTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Please log in as a user to see your tasks.</td></tr>';
+        tasksTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">Please log in as a user to see your tasks.</td></tr>';
         return;
     }
 
     const userTasks = getTasks().filter(task => task.createdBy === loggedInUser.id);
 
     if (userTasks.length === 0) {
-        tasksTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">No tasks yet. Click "Add Task" to create one! 🚀</td></tr>';
+        tasksTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No tasks yet. Click "Add Task" to create one! 🚀</td></tr>';
         return;
     }
 
     userTasks.forEach(task => {
         const row = tasksTableBody.insertRow();
+        const taskTypeColor = getTaskTypeColor(task.type);
         row.innerHTML = `
             <td><span class="task-title">${escapeHtml(task.title)}</span></td>
             <td>${escapeHtml(task.description)}</td>
+            <td><span class="task-type-badge" style="background-color: ${taskTypeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">${escapeHtml(task.type || 'N/A')}</span></td>
             <td>${formatTime(task.duration)}</td>
             <td>${formatTime(task.remaining)}</td>
+            <td>${escapeHtml(task.pairProgrammer || 'N/A')}</td>
             <td><span class="status-badge ${task.status}">${task.status.replace('-', ' ')}</span></td>
             <td>
                 ${task.status !== TASK_STATUS.COMPLETED ?
@@ -270,6 +297,20 @@ function renderUserTasks() {
     });
 }
 
+function getTaskTypeColor(taskType) {
+    switch(taskType) {
+        case 'task':
+            return '#3b82f6'; // Bright blue
+        case 'story':
+            return '#10b981'; // Green
+        case 'bug':
+            return '#ef4444'; // Red
+        default:
+            return '#6b7280'; // Gray for unknown types
+    }
+}
+
+
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -281,8 +322,10 @@ function submitNewTask(event) {
     const taskTitle = document.getElementById('taskTitle').value.trim();
     const taskDurationInput = document.getElementById('taskDuration').value.trim();
     const taskDescription = document.getElementById('taskDescription').value.trim();
+    const pairProgrammerId = document.getElementById('pairProgrammer').value; // Get selected paired programmer ID
+    const taskType = document.getElementById('taskType').value; // Get selected task type
 
-    if (!taskTitle || !taskDurationInput || !taskDescription) {
+    if (!taskTitle || !taskDurationInput || !taskDescription || !pairProgrammerId || !taskType) {
         showStatus('Please fill in all fields.', 'error');
         return;
     }
@@ -314,13 +357,31 @@ function submitNewTask(event) {
         remaining: durationSeconds,
         status: TASK_STATUS.PENDING,
         createdBy: loggedInUser.id,
+        pairProgrammer: pairProgrammerId, // Store the ID of the paired programmer
+        type: taskType, // Store the task type
         createdAt: new Date().toISOString()
     };
 
     allTasks.push(newTask);
-    saveTasks(allTasks); // This now saves to localStorage as well
+    saveTasks(allTasks);
+
+    // Update status of logged-in user and paired programmer to 'locked'
+    let allUsers = getUsers();
+    const creatorUserIndex = allUsers.findIndex(user => user.id === loggedInUser.id);
+    if (creatorUserIndex !== -1) {
+        allUsers[creatorUserIndex].status = USER_STATUS.LOCKED;
+        // Update the loggedInUser in sessionStorage as well if its status changes
+        setLoggedInUser(allUsers[creatorUserIndex]);
+    }
+
+    const pairedUserIndex = allUsers.findIndex(user => user.id === pairProgrammerId);
+    if (pairedUserIndex !== -1) {
+        allUsers[pairedUserIndex].status = USER_STATUS.LOCKED;
+    }
+    saveUsers(allUsers); // Save updated user statuses
 
     document.getElementById('submitTaskForm').reset();
+    populatePairProgrammers(); // Re-populate to reset selection
     navigateTo('view-tasks');
     renderUserTasks();
     showStatus('Task added successfully!', 'success');
@@ -332,10 +393,33 @@ function markTaskComplete(taskId) {
             let allTasks = getTasks();
             const taskIndex = allTasks.findIndex(t => t.id === taskId);
             if (taskIndex !== -1) {
+                const completedTask = allTasks[taskIndex];
                 allTasks[taskIndex].status = TASK_STATUS.COMPLETED;
                 allTasks[taskIndex].remaining = 0;
-                saveTasks(allTasks); // This now saves to localStorage as well
+                saveTasks(allTasks);
+
+                // Update status of task creator and paired programmer to 'available'
+                let allUsers = getUsers();
+                const creatorUserIndex = allUsers.findIndex(user => user.id === completedTask.createdBy);
+                if (creatorUserIndex !== -1) {
+                    allUsers[creatorUserIndex].status = USER_STATUS.AVAILABLE;
+                    // If the logged-in user just completed a task, update their session status too
+                    if (getLoggedInUser() && getLoggedInUser().id === allUsers[creatorUserIndex].id) {
+                        setLoggedInUser(allUsers[creatorUserIndex]);
+                    }
+                }
+
+                const pairedUserIndex = allUsers.findIndex(user => user.id === completedTask.pairProgrammer);
+                if (pairedUserIndex !== -1) {
+                    allUsers[pairedUserIndex].status = USER_STATUS.AVAILABLE;
+                }
+                saveUsers(allUsers); // Save updated user statuses
+
                 renderUserTasks();
+                // Re-render team view if active to reflect status changes immediately
+                if (document.getElementById('view-team') && document.getElementById('view-team').classList.contains('active')) {
+                    renderDevelopmentTeam();
+                }
                 showStatus('Task marked as completed!', 'success');
             }
         }
@@ -379,6 +463,53 @@ function updateUserTaskTimers() {
     }
 }
 
+// Function to populate the pair programmer dropdown
+function populatePairProgrammers() {
+    const pairProgrammerSelect = document.getElementById('pairProgrammer');
+    if (!pairProgrammerSelect) return;
+
+    // Clear existing options, but keep the default "Select Pair Programmer"
+    pairProgrammerSelect.innerHTML = '<option value="">Select Pair Programmer</option>';
+
+    const users = getUsers();
+    // Filter to only show 'user' role for pairing
+    users.filter(user => user.role === 'user').forEach(user => { // Removed the 'user.status === USER_STATUS.AVAILABLE' filter
+        const option = document.createElement('option');
+        option.value = user.id;
+        option.textContent = user.name || user.username; // Use name if available, otherwise username
+        // Optionally, you could add a visual cue if a user is 'locked' here
+        if (user.status === USER_STATUS.LOCKED) {
+            option.textContent += ' (Locked)';
+            // option.disabled = true; // You could disable it if you want to prevent selection
+        }
+        pairProgrammerSelect.appendChild(option);
+    });
+}
+
+// Function to render the development team
+function renderDevelopmentTeam() {
+    const developerTableBody = document.getElementById('developerTableBody');
+    if (!developerTableBody) return;
+
+    developerTableBody.innerHTML = '';
+    const users = getUsers();
+    const developers = users.filter(user => user.role === 'user'); // Assuming 'user' role are your developers
+
+    if (developers.length === 0) {
+        developerTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 40px;">No developers found.</td></tr>';
+        return;
+    }
+
+    developers.forEach(developer => {
+        const row = developerTableBody.insertRow();
+        row.innerHTML = `
+            <td>${escapeHtml(developer.name || developer.username)}</td>
+            <td><span class="badge ${developer.designation ? developer.designation.toLowerCase().replace(/\s/g, '-') : 'developer'}">${escapeHtml(developer.designation || 'Developer')}</span></td>
+            <td><span class="occupancy ${developer.status.toLowerCase()}">${escapeHtml(developer.status)}</span></td>
+        `;
+    });
+}
+
 // --- Profile Management ---
   function renderUserProfile() {
     const loggedInUser = getLoggedInUser(); // Now correctly retrieves from sessionStorage
@@ -390,7 +521,7 @@ function updateUserTaskTimers() {
         document.getElementById('UserProfileDesignation').textContent = loggedInUser.designation || 'N/A';
         document.getElementById('UserProfileStatus').textContent = loggedInUser.status || 'Active';
 
-       
+
         // Optionally update hidden or new HTML IDs for task stats if you add them
         // Example:
         // document.getElementById('UserTaskTotal').textContent = total;
@@ -434,6 +565,7 @@ document.addEventListener('DOMContentLoaded', async () => { // Made async to awa
         // Initialize UI based on user role (assuming user-dashboard.html and admin-dashboard.html exist)
         if (loggedInUser.role === 'user') {
             document.body.classList.add('user-dashboard-page');
+            populatePairProgrammers(); // Populate dropdown on load
             renderUserTasks();
             setInterval(updateUserTaskTimers, 1000); // Start timer updates for user tasks
 
@@ -447,6 +579,10 @@ document.addEventListener('DOMContentLoaded', async () => { // Made async to awa
                             navigateTo(viewId);
                             if (viewId === 'view-profile') {
                                 renderUserProfile(); // Call render function for profile
+                            } else if (viewId === 'view-add-task') {
+                                populatePairProgrammers(); // Re-populate dropdown when Add Task view is active
+                            } else if (viewId === 'view-team') { // Add this block
+                                renderDevelopmentTeam(); // Call render function for development team
                             }
                         }
                     });

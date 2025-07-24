@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+ 
     <nav class="sidebar">
         <div class="sidebar-header">
             <i class="fas fa-user-circle"></i>
@@ -24,16 +24,20 @@
                 <i class="fas fa-plus-circle"></i>
                 <span class="nav-text">Add Task</span>
             </a></li>
+            <li><a href="#" class="nav-link" data-view="view-team"><i class="fas fa-users"></i><span class="nav-text">Developer Team</span></a></li>
             <li><a href="#" class="nav-link" data-view="view-profile">
                 <i class="fas fa-user"></i> <span class="nav-text">Profile</span>
             </a></li>
+             
         </ul>
         <a href="#" id="logoutBtn" class="nav-link logout-button">
             <i class="fas fa-sign-out-alt"></i>
             <span class="nav-text">Logout</span>
         </a>
+ 
     </nav>
-
+ 
+ 
     <main class="main-content">
         <section id="view-tasks" class="view active">
             <div class="view-header">
@@ -45,8 +49,10 @@
                         <tr>
                             <th>Title</th>
                             <th>Description</th>
+                            <th>Type</th>
                             <th>Duration</th>
                             <th>Remaining</th>
+                            <th>Paired With</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -56,7 +62,24 @@
                 </table>
             </div>
         </section>
-
+        <section id="view-team" class="view">
+      <div class="view-header"><h2>Developer Team</h2></div>
+      <div class="card">
+        <table id="developerTable" class="styled-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="developerTableBody">
+            <!-- Developer data will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+ 
         <section id="view-add-task" class="view">
             <div class="view-header">
                 <h2>Add New Task</h2>
@@ -67,13 +90,24 @@
                         <input type="text" id="taskTitle" placeholder="📋 Task Title" required>
                         <input type="text" id="taskDuration" placeholder="⏱️ Duration (e.g., 2h, 30m, 90s)" required>
                     </div>
+                    <div class="form-group">
+                        <select id="pairProgrammer" name="pairProgrammer" required>
+                            <option value="">Select Pair Programmer</option>
+                            </select>
+                        <select id="taskType" name="taskType" required>
+                            <option value="">Select Task Type</option>
+                            <option value="task">Task</option>
+                            <option value="story">Story</option>
+                            <option value="bug">Bug</option>
+                        </select>
+                    </div>
                     <textarea id="taskDescription" placeholder="📝 Task Description (minimum 10 characters)" minlength="10" required></textarea>
                     <button type="submit" id="submitTaskBtn">🚀 Submit Task</button>
                 </form>
                 <p id="statusMessage"></p>
             </div>
         </section>
-
+ 
        <section id="view-profile" class="view">
         <div class="view-header">
             <h2>User Profile</h2>
@@ -94,13 +128,12 @@
             <div class="profile-detail">
                 <strong>Status:</strong> <span id="UserProfileStatus"></span>
             </div>
-            <!-- You can add more profile details here -->
             <button id="editUserProfileBtn" class="action-btn">Edit Profile</button>
         </div>
     </section>
-
+ 
     </main>
-
+ 
     <div id="confirmationModal" class="modal-overlay hidden">
         <div class="confirmation-modal">
             <p id="modalMessage">Are you sure?</p>
@@ -110,8 +143,8 @@
             </div>
         </div>
     </div>
-
+ 
    <script src="script.js"></script>
-
+ 
 </body>
 </html>
