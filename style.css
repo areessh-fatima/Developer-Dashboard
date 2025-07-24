@@ -10,6 +10,7 @@
     --error: #ef4444;
     --warning: #f59e0b;
     --info: #3b82f6;
+    --paired-color: #8a2be2; /* Violet for paired status */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -310,6 +311,10 @@ body.login-page {
 
 .occupancy.locked {
     color: var(--error);
+}
+
+.occupancy.paired { /* New style for paired status */
+    color: var(--paired-color);
 }
 
 /* Task Status Badges */

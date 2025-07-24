@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
- 
+
     <nav class="sidebar">
         <div class="sidebar-header">
             <i class="fas fa-user-circle"></i>
@@ -34,10 +34,10 @@
             <i class="fas fa-sign-out-alt"></i>
             <span class="nav-text">Logout</span>
         </a>
- 
+
     </nav>
- 
- 
+
+
     <main class="main-content">
         <section id="view-tasks" class="view active">
             <div class="view-header">
@@ -52,7 +52,8 @@
                             <th>Type</th>
                             <th>Duration</th>
                             <th>Remaining</th>
-                            <th>Paired With</th>
+                            <th>Assigned To</th> <!-- Updated column -->
+                            <th>Paired With</th> <!-- New column for paired programmer -->
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -79,7 +80,7 @@
         </table>
       </div>
     </section>
- 
+
         <section id="view-add-task" class="view">
             <div class="view-header">
                 <h2>Add New Task</h2>
@@ -91,9 +92,16 @@
                         <input type="text" id="taskDuration" placeholder="⏱️ Duration (e.g., 2h, 30m, 90s)" required>
                     </div>
                     <div class="form-group">
-                        <select id="pairProgrammer" name="pairProgrammer" required>
-                            <option value="">Select Pair Programmer</option>
-                            </select>
+                        <!-- New select for Assigned To Developer -->
+                        <select id="assignedToDeveloper" name="assignedToDeveloper" required>
+                            <option value="">Assign To Developer</option>
+                        </select>
+                        <!-- Updated select for Paired With Developer -->
+                        <select id="pairedWithDeveloper" name="pairedWithDeveloper">
+                            <option value="no-pair">No Pair</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <select id="taskType" name="taskType" required>
                             <option value="">Select Task Type</option>
                             <option value="task">Task</option>
@@ -107,7 +115,7 @@
                 <p id="statusMessage"></p>
             </div>
         </section>
- 
+
        <section id="view-profile" class="view">
         <div class="view-header">
             <h2>User Profile</h2>
@@ -131,9 +139,9 @@
             <button id="editUserProfileBtn" class="action-btn">Edit Profile</button>
         </div>
     </section>
- 
+
     </main>
- 
+
     <div id="confirmationModal" class="modal-overlay hidden">
         <div class="confirmation-modal">
             <p id="modalMessage">Are you sure?</p>
@@ -143,8 +151,8 @@
             </div>
         </div>
     </div>
- 
+
    <script src="script.js"></script>
- 
+
 </body>
 </html>

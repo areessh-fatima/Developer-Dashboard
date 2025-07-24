@@ -7,7 +7,8 @@ const TASK_STATUS = {
 
 const USER_STATUS = {
     AVAILABLE: "available",
-    LOCKED: "locked"
+    LOCKED: "locked", // For users working alone on a task
+    PAIRED: "paired" // For users working in a pair
 };
 
 // Global storage simulation (replacing localStorage)
@@ -30,10 +31,13 @@ async function initializeData() { // Made async to await fetch
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             appData.users = await response.json();
-            // Initialize default status if not present
+            // Initialize default status and pairedWith if not present
             appData.users.forEach(user => {
                 if (!user.status) {
                     user.status = USER_STATUS.AVAILABLE;
+                }
+                if (!user.pairedWith) {
+                    user.pairedWith = null; // Initialize pairedWith to null
                 }
             });
             localStorage.setItem('users', JSON.stringify(appData.users)); // Save initial fetch to localStorage
@@ -42,9 +46,9 @@ async function initializeData() { // Made async to await fetch
         console.error('Error fetching login.json or loading users from localStorage:', error);
         // Fallback to hardcoded users if fetching fails or localStorage is corrupt
         appData.users = [
-            { id: 'user_demo_123', username: 'user', password: 'userpass', role: 'user', email: 'user@example.com', name: 'Demo User', designation: 'Developer', status: USER_STATUS.AVAILABLE },
-            { id: 'user_demo_456', username: 'user2', password: 'userpass2', role: 'user', email: 'user2@example.com', name: 'Another User', designation: 'Developer', status: USER_STATUS.AVAILABLE },
-            { id: 'admin_demo_456', username: 'admin', password: 'adminpass', role: 'admin', email: 'admin@example.com', name: 'Admin User', designation: 'Administrator', status: USER_STATUS.AVAILABLE }
+            { id: 'user_demo_123', username: 'user', password: 'userpass', role: 'user', email: 'user@example.com', name: 'Demo User', designation: 'Developer', status: USER_STATUS.AVAILABLE, pairedWith: null },
+            { id: 'user_demo_456', username: 'user2', password: 'userpass2', role: 'user', email: 'user2@example.com', name: 'Another User', designation: 'Developer', status: USER_STATUS.AVAILABLE, pairedWith: null },
+            { id: 'admin_demo_456', username: 'admin', password: 'adminpass', role: 'admin', email: 'admin@example.com', name: 'Admin User', designation: 'Administrator', status: USER_STATUS.AVAILABLE, pairedWith: null }
         ];
         localStorage.setItem('users', JSON.stringify(appData.users)); // Save fallback users
     }
@@ -107,6 +111,12 @@ function setLoggedInUser(user) {
     } else {
         sessionStorage.removeItem('loggedInUser'); // Remove from sessionStorage on logout
     }
+}
+
+// Helper to get user name by ID
+function getUserNameById(userId) {
+    const user = appData.users.find(u => u.id === userId);
+    return user ? user.name || user.username : 'Unknown User';
 }
 
 // --- Authentication ---
@@ -263,27 +273,38 @@ function renderUserTasks() {
     tasksTableBody.innerHTML = '';
     const loggedInUser = getLoggedInUser(); // Now correctly retrieves from sessionStorage
     if (!loggedInUser || loggedInUser.role !== 'user') {
-        tasksTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">Please log in as a user to see your tasks.</td></tr>';
+        tasksTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">Please log in as a user to see your tasks.</td></tr>';
         return;
     }
 
-    const userTasks = getTasks().filter(task => task.createdBy === loggedInUser.id);
+    // Filter tasks for the logged-in user, including tasks where they are the creator, assignedTo, or pairedWith
+    const userTasks = getTasks().filter(task =>
+        task.createdBy === loggedInUser.id ||
+        task.assignedTo === loggedInUser.id ||
+        task.pairedWith === loggedInUser.id
+    );
 
     if (userTasks.length === 0) {
-        tasksTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No tasks yet. Click "Add Task" to create one! 🚀</td></tr>';
+        tasksTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">No tasks yet. Click "Add Task" to create one! 🚀</td></tr>';
         return;
     }
 
     userTasks.forEach(task => {
         const row = tasksTableBody.insertRow();
         const taskTypeColor = getTaskTypeColor(task.type);
+        
+        // Determine assignedTo and pairedWith display text
+        const assignedToText = task.assignedTo ? getUserNameById(task.assignedTo) : 'N/A';
+        const pairedWithText = task.pairedWith ? getUserNameById(task.pairedWith) : 'N/A';
+
         row.innerHTML = `
             <td><span class="task-title">${escapeHtml(task.title)}</span></td>
             <td>${escapeHtml(task.description)}</td>
             <td><span class="task-type-badge" style="background-color: ${taskTypeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">${escapeHtml(task.type || 'N/A')}</span></td>
             <td>${formatTime(task.duration)}</td>
             <td>${formatTime(task.remaining)}</td>
-            <td>${escapeHtml(task.pairProgrammer || 'N/A')}</td>
+            <td>${escapeHtml(assignedToText)}</td>
+            <td>${escapeHtml(pairedWithText)}</td>
             <td><span class="status-badge ${task.status}">${task.status.replace('-', ' ')}</span></td>
             <td>
                 ${task.status !== TASK_STATUS.COMPLETED ?
@@ -322,11 +343,12 @@ function submitNewTask(event) {
     const taskTitle = document.getElementById('taskTitle').value.trim();
     const taskDurationInput = document.getElementById('taskDuration').value.trim();
     const taskDescription = document.getElementById('taskDescription').value.trim();
-    const pairProgrammerId = document.getElementById('pairProgrammer').value; // Get selected paired programmer ID
+    const assignedToDeveloperId = document.getElementById('assignedToDeveloper').value; // Get assigned developer ID
+    const pairedWithDeveloperId = document.getElementById('pairedWithDeveloper').value; // Get paired developer ID
     const taskType = document.getElementById('taskType').value; // Get selected task type
 
-    if (!taskTitle || !taskDurationInput || !taskDescription || !pairProgrammerId || !taskType) {
-        showStatus('Please fill in all fields.', 'error');
+    if (!taskTitle || !taskDurationInput || !taskDescription || !assignedToDeveloperId || !taskType) {
+        showStatus('Please fill in all required fields (Title, Duration, Description, Assigned To, Task Type).', 'error');
         return;
     }
 
@@ -346,8 +368,15 @@ function submitNewTask(event) {
         showStatus('You must be logged in as a user to create tasks.', 'error');
         return;
     }
+    
+    // Validation: Assigned To and Paired With cannot be the same person
+    if (assignedToDeveloperId !== 'no-one' && pairedWithDeveloperId !== 'no-pair' && assignedToDeveloperId === pairedWithDeveloperId) {
+        showStatus('Assigned Developer and Paired Programmer cannot be the same person.', 'warning');
+        return;
+    }
 
     let allTasks = getTasks();
+    let allUsers = getUsers();
 
     const newTask = {
         id: `task_${Date.now()}`,
@@ -357,7 +386,8 @@ function submitNewTask(event) {
         remaining: durationSeconds,
         status: TASK_STATUS.PENDING,
         createdBy: loggedInUser.id,
-        pairProgrammer: pairProgrammerId, // Store the ID of the paired programmer
+        assignedTo: assignedToDeveloperId,
+        pairedWith: pairedWithDeveloperId === 'no-pair' ? null : pairedWithDeveloperId, // Store null if 'no-pair'
         type: taskType, // Store the task type
         createdAt: new Date().toISOString()
     };
@@ -365,23 +395,34 @@ function submitNewTask(event) {
     allTasks.push(newTask);
     saveTasks(allTasks);
 
-    // Update status of logged-in user and paired programmer to 'locked'
-    let allUsers = getUsers();
-    const creatorUserIndex = allUsers.findIndex(user => user.id === loggedInUser.id);
-    if (creatorUserIndex !== -1) {
-        allUsers[creatorUserIndex].status = USER_STATUS.LOCKED;
-        // Update the loggedInUser in sessionStorage as well if its status changes
-        setLoggedInUser(allUsers[creatorUserIndex]);
+    // Update status of assignedTo developer
+    const assignedToIndex = allUsers.findIndex(user => user.id === assignedToDeveloperId);
+    if (assignedToIndex !== -1) {
+        if (pairedWithDeveloperId !== 'no-pair') {
+            allUsers[assignedToIndex].status = USER_STATUS.PAIRED;
+            allUsers[assignedToIndex].pairedWith = pairedWithDeveloperId;
+        } else {
+            allUsers[assignedToIndex].status = USER_STATUS.LOCKED;
+            allUsers[assignedToIndex].pairedWith = null;
+        }
+        // If the logged-in user is the assignedTo developer, update their session status
+        if (loggedInUser.id === assignedToDeveloperId) {
+            setLoggedInUser(allUsers[assignedToIndex]);
+        }
     }
 
-    const pairedUserIndex = allUsers.findIndex(user => user.id === pairProgrammerId);
-    if (pairedUserIndex !== -1) {
-        allUsers[pairedUserIndex].status = USER_STATUS.LOCKED;
+    // Update status of pairedWith developer if selected
+    if (pairedWithDeveloperId !== 'no-pair') {
+        const pairedWithIndex = allUsers.findIndex(user => user.id === pairedWithDeveloperId);
+        if (pairedWithIndex !== -1) {
+            allUsers[pairedWithIndex].status = USER_STATUS.PAIRED;
+            allUsers[pairedWithIndex].pairedWith = assignedToDeveloperId;
+        }
     }
     saveUsers(allUsers); // Save updated user statuses
 
     document.getElementById('submitTaskForm').reset();
-    populatePairProgrammers(); // Re-populate to reset selection
+    populateDeveloperDropdowns(); // Re-populate to reset selection and reflect new statuses
     navigateTo('view-tasks');
     renderUserTasks();
     showStatus('Task added successfully!', 'success');
@@ -398,20 +439,25 @@ function markTaskComplete(taskId) {
                 allTasks[taskIndex].remaining = 0;
                 saveTasks(allTasks);
 
-                // Update status of task creator and paired programmer to 'available'
                 let allUsers = getUsers();
-                const creatorUserIndex = allUsers.findIndex(user => user.id === completedTask.createdBy);
-                if (creatorUserIndex !== -1) {
-                    allUsers[creatorUserIndex].status = USER_STATUS.AVAILABLE;
-                    // If the logged-in user just completed a task, update their session status too
-                    if (getLoggedInUser() && getLoggedInUser().id === allUsers[creatorUserIndex].id) {
-                        setLoggedInUser(allUsers[creatorUserIndex]);
+
+                // Update status of assignedTo developer
+                const assignedToIndex = allUsers.findIndex(user => user.id === completedTask.assignedTo);
+                if (assignedToIndex !== -1) {
+                    allUsers[assignedToIndex].status = USER_STATUS.AVAILABLE;
+                    allUsers[assignedToIndex].pairedWith = null;
+                    if (getLoggedInUser() && getLoggedInUser().id === allUsers[assignedToIndex].id) {
+                        setLoggedInUser(allUsers[assignedToIndex]);
                     }
                 }
 
-                const pairedUserIndex = allUsers.findIndex(user => user.id === completedTask.pairProgrammer);
-                if (pairedUserIndex !== -1) {
-                    allUsers[pairedUserIndex].status = USER_STATUS.AVAILABLE;
+                // Update status of pairedWith developer if applicable
+                if (completedTask.pairedWith) {
+                    const pairedWithIndex = allUsers.findIndex(user => user.id === completedTask.pairedWith);
+                    if (pairedWithIndex !== -1) {
+                        allUsers[pairedWithIndex].status = USER_STATUS.AVAILABLE;
+                        allUsers[pairedWithIndex].pairedWith = null;
+                    }
                 }
                 saveUsers(allUsers); // Save updated user statuses
 
@@ -437,7 +483,8 @@ function updateUserTaskTimers() {
     let tasksUpdated = false;
 
     allTasks.forEach(task => {
-        if (task.createdBy === loggedInUser.id) { // Only affect current logged-in user's tasks
+        // Only affect tasks where the current user is assignedTo or pairedWith
+        if ((task.assignedTo === loggedInUser.id || task.pairedWith === loggedInUser.id) && task.status !== TASK_STATUS.COMPLETED) {
             if (task.status === TASK_STATUS.PENDING) {
                 task.status = TASK_STATUS.IN_PROGRESS;
                 tasksUpdated = true;
@@ -447,9 +494,27 @@ function updateUserTaskTimers() {
                 if (task.remaining > 0) {
                     task.remaining -= 1;
                     tasksUpdated = true;
-                } else if (task.remaining <= 0 && task.status !== TASK_STATUS.COMPLETED) {
+                } else if (task.remaining <= 0) { // Removed redundant check for COMPLETED
                     task.status = TASK_STATUS.COMPLETED;
                     tasksUpdated = true;
+                    // When a task completes via timer, also update user statuses
+                    let allUsers = getUsers();
+                    const assignedToIndex = allUsers.findIndex(user => user.id === task.assignedTo);
+                    if (assignedToIndex !== -1) {
+                        allUsers[assignedToIndex].status = USER_STATUS.AVAILABLE;
+                        allUsers[assignedToIndex].pairedWith = null;
+                        if (getLoggedInUser() && getLoggedInUser().id === allUsers[assignedToIndex].id) {
+                            setLoggedInUser(allUsers[assignedToIndex]);
+                        }
+                    }
+                    if (task.pairedWith) {
+                        const pairedWithIndex = allUsers.findIndex(user => user.id === task.pairedWith);
+                        if (pairedWithIndex !== -1) {
+                            allUsers[pairedWithIndex].status = USER_STATUS.AVAILABLE;
+                            allUsers[pairedWithIndex].pairedWith = null;
+                        }
+                    }
+                    saveUsers(allUsers); // Save updated user statuses
                 }
             }
         }
@@ -460,29 +525,41 @@ function updateUserTaskTimers() {
         if (document.getElementById('view-tasks') && document.getElementById('view-tasks').classList.contains('active')) {
             renderUserTasks();
         }
+        // Also re-render team view if active to reflect status changes immediately
+        if (document.getElementById('view-team') && document.getElementById('view-team').classList.contains('active')) {
+            renderDevelopmentTeam();
+        }
     }
 }
 
-// Function to populate the pair programmer dropdown
-function populatePairProgrammers() {
-    const pairProgrammerSelect = document.getElementById('pairProgrammer');
-    if (!pairProgrammerSelect) return;
+// Function to populate the developer dropdowns (Assigned To and Paired With)
+function populateDeveloperDropdowns() {
+    const assignedToSelect = document.getElementById('assignedToDeveloper');
+    const pairedWithSelect = document.getElementById('pairedWithDeveloper');
+    if (!assignedToSelect || !pairedWithSelect) return;
 
-    // Clear existing options, but keep the default "Select Pair Programmer"
-    pairProgrammerSelect.innerHTML = '<option value="">Select Pair Programmer</option>';
+    // Clear existing options, but keep the default "Assign To Developer" and "No Pair"
+    assignedToSelect.innerHTML = '<option value="">Assign To Developer</option>';
+    pairedWithSelect.innerHTML = '<option value="no-pair">No Pair</option>';
 
     const users = getUsers();
-    // Filter to only show 'user' role for pairing
-    users.filter(user => user.role === 'user').forEach(user => { // Removed the 'user.status === USER_STATUS.AVAILABLE' filter
-        const option = document.createElement('option');
-        option.value = user.id;
-        option.textContent = user.name || user.username; // Use name if available, otherwise username
-        // Optionally, you could add a visual cue if a user is 'locked' here
-        if (user.status === USER_STATUS.LOCKED) {
-            option.textContent += ' (Locked)';
-            // option.disabled = true; // You could disable it if you want to prevent selection
+    const loggedInUser = getLoggedInUser();
+
+    // Filter to only show 'user' role for assignment
+    users.filter(user => user.role === 'user').forEach(user => {
+        // Add to Assigned To dropdown
+        const assignedOption = document.createElement('option');
+        assignedOption.value = user.id;
+        assignedOption.textContent = user.name || user.username;
+        assignedToSelect.appendChild(assignedOption);
+
+        // Add to Paired With dropdown (excluding the logged-in user)
+        if (user.id !== loggedInUser.id) {
+            const pairedOption = document.createElement('option');
+            pairedOption.value = user.id;
+            pairedOption.textContent = user.name || user.username;
+            pairedWithSelect.appendChild(pairedOption);
         }
-        pairProgrammerSelect.appendChild(option);
     });
 }
 
@@ -501,11 +578,19 @@ function renderDevelopmentTeam() {
     }
 
     developers.forEach(developer => {
-        const row = developerTableBody.insertRow();
+        const row = developerTableBody.insertRow(); // Corrected: use developerTableBody.insertRow()
+        let statusDisplay = developer.status;
+        if (developer.status === USER_STATUS.PAIRED && developer.pairedWith) {
+            const pairedWithName = getUserNameById(developer.pairedWith);
+            statusDisplay = `Paired with ${pairedWithName}`;
+        } else if (developer.status === USER_STATUS.LOCKED) {
+            statusDisplay = `Busy`;
+        }
+
         row.innerHTML = `
             <td>${escapeHtml(developer.name || developer.username)}</td>
             <td><span class="badge ${developer.designation ? developer.designation.toLowerCase().replace(/\s/g, '-') : 'developer'}">${escapeHtml(developer.designation || 'Developer')}</span></td>
-            <td><span class="occupancy ${developer.status.toLowerCase()}">${escapeHtml(developer.status)}</span></td>
+            <td><span class="occupancy ${developer.status.toLowerCase()}">${escapeHtml(statusDisplay)}</span></td>
         `;
     });
 }
@@ -519,7 +604,14 @@ function renderDevelopmentTeam() {
         document.getElementById('UserProfileEmail').textContent = loggedInUser.email || 'N/A';
         document.getElementById('UserProfileName').textContent = loggedInUser.name || 'N/A';
         document.getElementById('UserProfileDesignation').textContent = loggedInUser.designation || 'N/A';
-        document.getElementById('UserProfileStatus').textContent = loggedInUser.status || 'Active';
+        
+        let userStatusDisplay = loggedInUser.status || 'Active';
+        if (loggedInUser.status === USER_STATUS.PAIRED && loggedInUser.pairedWith) {
+            userStatusDisplay = `Paired with ${getUserNameById(loggedInUser.pairedWith)}`;
+        } else if (loggedInUser.status === USER_STATUS.LOCKED) {
+            userStatusDisplay = `Busy on task`;
+        }
+        document.getElementById('UserProfileStatus').textContent = userStatusDisplay;
 
 
         // Optionally update hidden or new HTML IDs for task stats if you add them
@@ -565,7 +657,7 @@ document.addEventListener('DOMContentLoaded', async () => { // Made async to awa
         // Initialize UI based on user role (assuming user-dashboard.html and admin-dashboard.html exist)
         if (loggedInUser.role === 'user') {
             document.body.classList.add('user-dashboard-page');
-            populatePairProgrammers(); // Populate dropdown on load
+            populateDeveloperDropdowns(); // Populate dropdowns on load
             renderUserTasks();
             setInterval(updateUserTaskTimers, 1000); // Start timer updates for user tasks
 
@@ -580,7 +672,7 @@ document.addEventListener('DOMContentLoaded', async () => { // Made async to awa
                             if (viewId === 'view-profile') {
                                 renderUserProfile(); // Call render function for profile
                             } else if (viewId === 'view-add-task') {
-                                populatePairProgrammers(); // Re-populate dropdown when Add Task view is active
+                                populateDeveloperDropdowns(); // Re-populate dropdowns when Add Task view is active
                             } else if (viewId === 'view-team') { // Add this block
                                 renderDevelopmentTeam(); // Call render function for development team
                             }
