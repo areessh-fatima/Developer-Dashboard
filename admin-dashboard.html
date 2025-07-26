@@ -746,7 +746,6 @@
     </ul>
     <a href="#" id="logoutBtn" class="nav-link logout-button"><i class="fas fa-sign-out-alt"></i><span class="nav-text">Logout</span></a>
   </nav>
-
   <main class="main-content">
     <section id="view-dashboard" class="view active">
       <div class="view-header"><h2>Active Tasks</h2></div>
@@ -835,8 +834,7 @@
         <p id="statusMessage"></p>
       </div>
     </section>
-  </main>
-
+</main>
   <div id="confirmationModal" class="modal-overlay hidden">
       <div class="confirmation-modal">
           <p id="modalMessage">Are you sure?</p>
@@ -846,6 +844,7 @@
           </div>
       </div>
   </div>
+  
 
   <script>
     // --- Constants and Global State ---
@@ -987,8 +986,7 @@
             } else if (foundUser.role === 'admin') {
                 window.location.href = 'admin-dashboard.html';
             }
-        } else {
-            errorMessageDiv.textContent = 'Invalid username, password, or role.';
+        } else {  
             errorMessageDiv.classList.add('visible'); // Show error message
         }
     }
@@ -1114,13 +1112,13 @@
 
         if (userTasks.length === 0) {
             tasksTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">No tasks yet. Click "Add Task" to create one! 🚀</td></tr>';
-            return;
+           innerHTML = `
+                <td return;
         }
 
         userTasks.forEach(task => {
             const row = tasksTableBody.insertRow();
-            row.innerHTML = `
-                <td><span class="task-title">${escapeHtml(task.title)}</span></td>
+            row><span class="task-title">${escapeHtml(task.title)}</span></td>
                 <td>${escapeHtml(task.description)}</td>
                 <td>${formatTime(task.duration)}</td>
                 <td>${formatTime(task.remaining)}</td>
@@ -1134,7 +1132,7 @@
                     }
                 </td>
             `;
-        });
+        };
     }
 
     function submitNewTask(event) { // For user dashboard's add task
@@ -1624,7 +1622,36 @@
             }
         }
     });
-  </script>
 
+    const form = document.getElementById('taskForm');
+  const messageBox = document.getElementById('responseMessage');
+
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbx_308lXBNnovs6om7JkRRveMXa0yZm2PLSgPZ8XuWtT6BLBiW6iOreLaZskIUWIcqKtA/exec';
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const data = new URLSearchParams(formData);
+
+    messageBox.textContent = '⏳ Submitting...';
+    messageBox.classList.remove('error');
+
+    try {
+      const response = await fetch(scriptURL, {
+        method: 'POST',
+        body: data
+      });
+
+      const text = await response.text();
+      messageBox.textContent = '✅ Task submitted successfully!';
+      form.reset();
+    } catch (error) {
+      console.error('Submission error:', error);
+      messageBox.textContent = '❌ Error submitting task. Please try again.';
+      messageBox.classList.add('error');
+    }
+  });
+  </script>
 </body>
 </html>
