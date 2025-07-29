@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="https://kit.fontawesome.com/a2e0ad0c3c.js" crossorigin="anonymous"></script>
 
+
   <style>
     :root {
         --primary-color: #667eea;
@@ -845,7 +846,7 @@
       </div>
   </div>
   
-
+<script src="sheet.js"></script>
   <script>
     // --- Constants and Global State ---
     const TASK_STATUS = {
@@ -1464,7 +1465,11 @@
         renderAdminTasks();
         renderDevelopers(); // Update developer statuses
         showStatus('Task added successfully by admin!', 'success');
+
+sendTaskToGoogleSheet(newTask); // Send task to Google Sheet
     }
+
+ 
 
     function markTaskCompleteAdmin(taskId) {
         showModal('Are you sure you want to mark this task as completed?', (confirmed) => {
@@ -1623,35 +1628,7 @@
         }
     });
 
-    const form = document.getElementById('taskForm');
-  const messageBox = document.getElementById('responseMessage');
-
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbx_308lXBNnovs6om7JkRRveMXa0yZm2PLSgPZ8XuWtT6BLBiW6iOreLaZskIUWIcqKtA/exec';
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(form);
-    const data = new URLSearchParams(formData);
-
-    messageBox.textContent = '⏳ Submitting...';
-    messageBox.classList.remove('error');
-
-    try {
-      const response = await fetch(scriptURL, {
-        method: 'POST',
-        body: data
-      });
-
-      const text = await response.text();
-      messageBox.textContent = '✅ Task submitted successfully!';
-      form.reset();
-    } catch (error) {
-      console.error('Submission error:', error);
-      messageBox.textContent = '❌ Error submitting task. Please try again.';
-      messageBox.classList.add('error');
-    }
-  });
+    
   </script>
 </body>
 </html>

@@ -327,7 +327,7 @@ function getTaskTypeColor(taskType) {
         case 'bug':
             return '#ef4444'; // Red
         default:
-            return '#6b7280'; // Gray for unknown types
+            return '#252a33ff'; // Gray for unknown types
     }
 }
 
@@ -426,6 +426,7 @@ function submitNewTask(event) {
     navigateTo('view-tasks');
     renderUserTasks();
     showStatus('Task added successfully!', 'success');
+    sendTaskToGoogleSheet(newTask); // Send task to Google Sheet
 }
 
 function markTaskComplete(taskId) {
